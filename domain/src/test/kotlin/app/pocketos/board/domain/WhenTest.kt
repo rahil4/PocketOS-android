@@ -121,6 +121,10 @@ class WhenTest {
         assertNull(Recurrence.anchorAfterMove(moved, due, due, "weekly")) // برگشت به برنامه
         assertNull(Recurrence.anchorAfterMove(due, null, moved, null))
         assertEquals(LocalDate.of(2026, 11, 24), Recurrence.nextAfterDone(moved, due, "weekly", moved))
+        // نوبتِ جابه‌جاشده پیش از رسیدن روز برنامه انجام شد ← نوبت بعد، بعد از روز برنامه
+        assertEquals(LocalDate.of(2026, 11, 24), Recurrence.nextAfterDone(moved, due, "weekly", LocalDate.of(2026, 11, 15)))
+        assertEquals(LocalDate.of(2026, 11, 24), Recurrence.nextAfterDone(due, null, "weekly", LocalDate.of(2026, 11, 15))) // انجام زودهنگام
+        assertEquals(LocalDate.of(2026, 11, 18), Recurrence.nextAfterDone(LocalDate.of(2026, 11, 17), null, "daily", LocalDate.of(2026, 11, 15)))
     }
 
     @Test

@@ -6,9 +6,15 @@ import java.time.ZonedDateTime
 
 /** قواعد کار تکراری و جابه‌جایی نوبت. */
 object Recurrence {
-    /** نوبت بعدی پس از «انجام شد»: از برنامهٔ ثابت (anchor اگر نوبت جابه‌جا شده بود). */
-    fun nextAfterDone(due: LocalDate, anchor: LocalDate?, repeat: String, today: LocalDate): LocalDate? =
-        When.nextDue(anchor ?: due, repeat, today)
+    /**
+     * نوبت بعدی پس از «انجام شد»: از برنامهٔ ثابت (anchor اگر نوبت جابه‌جا شده بود).
+     * نوبت بعدی همیشه بعد از امروز و بعد از روز برنامهٔ همین نوبت می‌آید؛ پس انجام زودهنگام یا انجامِ
+     * نوبتِ جابه‌جاشده، نوبتی روی همان روز نمی‌سازد.
+     */
+    fun nextAfterDone(due: LocalDate, anchor: LocalDate?, repeat: String, today: LocalDate): LocalDate? {
+        val base = anchor ?: due
+        return When.nextDue(base, repeat, if (base > today) base else today)
+    }
 
     /**
      * anchor تازه وقتی فقط همین نوبت به [newDay] می‌رود. برگرداندن به روز برنامه anchor را پاک می‌کند (null).
