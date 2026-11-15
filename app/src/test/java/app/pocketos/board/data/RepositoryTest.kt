@@ -100,7 +100,7 @@ class RepositoryTest {
         val b = customers.create("رنجبر دوم", "09120000000")
         val k = cases.create(b, "پرونده")
         db.openHelper.writableDatabase.execSQL(
-            "INSERT INTO tasks (customerId, caseId, title, createdAt) VALUES ($b, $k, 'کار', 1)",
+            "INSERT INTO tasks (customerId, caseId, title, searchText, createdAt) VALUES ($b, $k, 'کار', '', 1)",
         )
         db.openHelper.writableDatabase.execSQL(
             "INSERT INTO items (kind, customerId, caseId, text, searchText, createdAt) VALUES ('text', $b, $k, 'یادداشت', '', 1)",
