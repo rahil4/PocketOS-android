@@ -34,7 +34,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import app.pocketos.board.R
 import app.pocketos.board.ui.calendar.CalendarScreen
-import app.pocketos.board.ui.case.CaseScreen
+import app.pocketos.board.ui.cases.CaseScreen
 import app.pocketos.board.ui.customers.CustomerScreen
 import app.pocketos.board.ui.customers.CustomersScreen
 import app.pocketos.board.ui.home.HomeScreen

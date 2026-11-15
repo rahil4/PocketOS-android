@@ -1,4 +1,4 @@
-package app.pocketos.board.ui.case
+package app.pocketos.board.ui.cases
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
