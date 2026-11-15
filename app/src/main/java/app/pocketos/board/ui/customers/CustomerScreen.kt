@@ -4,9 +4,9 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,19 +36,33 @@ import app.pocketos.board.ui.common.Avatar
 import app.pocketos.board.ui.common.CaseFormDialog
 import app.pocketos.board.ui.common.CustomerFormDialog
 import app.pocketos.board.ui.common.CustomerPickerDialog
-import app.pocketos.board.ui.common.EmptyNote
 import app.pocketos.board.ui.common.PickItem
 import app.pocketos.board.ui.common.Pill
 import app.pocketos.board.ui.common.SectionLabel
 import app.pocketos.board.ui.common.StripeCard
 import app.pocketos.board.ui.common.stripeColor
+import app.pocketos.board.ui.stream.CaptureBar
+import app.pocketos.board.ui.stream.StreamOverlays
+import app.pocketos.board.ui.stream.StreamScope
+import app.pocketos.board.ui.stream.StreamViewModel
+import app.pocketos.board.ui.stream.TaskRow
+import app.pocketos.board.ui.stream.historySection
+import app.pocketos.board.ui.stream.rememberOverlayState
 import app.pocketos.board.ui.theme.board
 import java.time.LocalDate
 
 @Composable
-fun CustomerScreen(onBack: () -> Unit, onOpenCase: (Long) -> Unit, vm: CustomerViewModel = hiltViewModel()) {
+fun CustomerScreen(
+    onBack: () -> Unit,
+    onOpenCase: (Long) -> Unit,
+    onOpenTag: (String) -> Unit,
+    vm: CustomerViewModel = hiltViewModel(),
+    stream: StreamViewModel = hiltViewModel(),
+) {
     val st by vm.state.collectAsStateWithLifecycle()
     val others by vm.others.collectAsStateWithLifecycle()
+    val ss by stream.state.collectAsStateWithLifecycle()
+    val overlays = rememberOverlayState()
     val context = LocalContext.current
     var menu by rememberSaveable { mutableStateOf(false) }
     var edit by rememberSaveable { mutableStateOf(false) }
@@ -59,10 +73,10 @@ fun CustomerScreen(onBack: () -> Unit, onOpenCase: (Long) -> Unit, vm: CustomerV
     // مشتری حذف یا ادغام شد ← برگرد
     LaunchedEffect(st.loaded, st.customer == null) { if (st.loaded && st.customer == null) onBack() }
     val c = st.customer ?: return
+    LaunchedEffect(c.id) { stream.bind(StreamScope.Customer(c.id)) }
 
     if (edit) {
-        CustomerFormDialog("ویرایش مشتری", c.name, c.phone, "ذخیره",
-            { edit = false }) { n, p -> edit = false; vm.update(n, p) }
+        CustomerFormDialog("ویرایش مشتری", c.name, c.phone, "ذخیره", { edit = false }) { n, p -> edit = false; vm.update(n, p) }
     }
     if (newCase) {
         CaseFormDialog("پروندهٔ تازه", vm.today, "", null, "ساخت", { newCase = false }) { t, d ->
@@ -76,72 +90,93 @@ fun CustomerScreen(onBack: () -> Unit, onOpenCase: (Long) -> Unit, vm: CustomerV
             { merge = false },
         ) { target -> merge = false; vm.merge(target.id) {} }
     }
+    StreamOverlays(stream, overlays)
 
     val open = st.cases.filter { CaseStatus.of(it.status).open }
     val closed = st.cases.filter { !CaseStatus.of(it.status).open }
+    val tasksByCase = ss.tasks.groupBy { it.caseId }
+    val nowMillis = System.currentTimeMillis()
 
-    LazyColumn(
-        Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 12.dp, bottom = 24.dp),
-    ) {
-        item {
-            TextButton(onBack) { Text("‹ مشتری‌ها") }
-        }
-        item {
-            StripeCard(stripeColor(c.id)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Avatar(c.name, c.id, 48.dp)
-                    Column(Modifier.weight(1f)) {
-                        Text((if (c.pinnedAt != null) "★ " else "") + c.name, style = MaterialTheme.typography.titleLarge)
-                        if (c.phone.isNotBlank()) Text(Phone.display(c.phone), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted)
-                        if (c.archivedAt != null) Text("بایگانی‌شده", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
-                    }
-                }
-            }
-        }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (c.phone.isNotBlank()) {
-                    Pill("تماس") { context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${c.phone}"))) }
-                    Pill("پیام") { context.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:${c.phone}"))) }
-                }
-                Column {
-                    Pill("⋯ بیشتر") { menu = true }
-                    DropdownMenu(menu, { menu = false }) {
-                        DropdownMenuItem({ Text("ویرایش نام و تلفن") }, { menu = false; edit = true })
-                        DropdownMenuItem(
-                            { Text(if (c.pinnedAt != null) "برداشتن ستاره" else "★ ستاره‌دار کردن") },
-                            { menu = false; vm.setStar(c.pinnedAt == null) },
-                        )
-                        DropdownMenuItem({ Text("ادغام با مشتری دیگر…") }, { menu = false; merge = true })
-                        DropdownMenuItem(
-                            { Text(if (c.archivedAt != null) "برگرداندن از بایگانی" else "بایگانی") },
-                            { menu = false; vm.setArchived(c.archivedAt == null) },
-                        )
-                        DropdownMenuItem({ Text("حذف (به سطل بازیافت)") }, { menu = false; vm.delete(c.name) })
-                    }
-                }
-            }
-        }
-        item { SectionLabel("پرونده‌ها") }
-        items(open, key = { "c${it.id}" }) { k -> CaseCard(k.id, k.title, k.status, k.dueDay, vm.today) { onOpenCase(k.id) } }
-        item { Pill("＋ پروندهٔ تازه", primary = true) { newCase = true } }
-        if (closed.isNotEmpty()) {
+    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+        LazyColumn(
+            Modifier.weight(1f).padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
+        ) {
+            item { TextButton(onBack) { Text("‹ مشتری‌ها") } }
             item {
-                TextButton({ closedOpen = !closedOpen }) {
-                    Text((if (closedOpen) "▾" else "▸") + Digits.fa(" نهایی و آرشیو (${closed.size})"))
+                StripeCard(stripeColor(c.id)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Avatar(c.name, c.id, 48.dp)
+                        Column(Modifier.weight(1f)) {
+                            Text((if (c.pinnedAt != null) "★ " else "") + c.name, style = MaterialTheme.typography.titleLarge)
+                            if (c.phone.isNotBlank()) Text(Phone.display(c.phone), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted)
+                            if (c.archivedAt != null) Text("بایگانی‌شده", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
+                        }
+                    }
                 }
             }
-            if (closedOpen) items(closed, key = { "x${it.id}" }) { k -> CaseCard(k.id, k.title, k.status, k.dueDay, vm.today) { onOpenCase(k.id) } }
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (c.phone.isNotBlank()) {
+                        Pill("تماس") { context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${c.phone}"))) }
+                        Pill("پیام") { context.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:${c.phone}"))) }
+                    }
+                    Column {
+                        Pill("⋯ بیشتر") { menu = true }
+                        DropdownMenu(menu, { menu = false }) {
+                            DropdownMenuItem({ Text("ویرایش نام و تلفن") }, { menu = false; edit = true })
+                            DropdownMenuItem(
+                                { Text(if (c.pinnedAt != null) "برداشتن ستاره" else "★ ستاره‌دار کردن") },
+                                { menu = false; vm.setStar(c.pinnedAt == null) },
+                            )
+                            DropdownMenuItem({ Text("ادغام با مشتری دیگر…") }, { menu = false; merge = true })
+                            DropdownMenuItem(
+                                { Text(if (c.archivedAt != null) "برگرداندن از بایگانی" else "بایگانی") },
+                                { menu = false; vm.setArchived(c.archivedAt == null) },
+                            )
+                            DropdownMenuItem({ Text("حذف (به سطل بازیافت)") }, { menu = false; vm.delete(c.name) })
+                        }
+                    }
+                }
+            }
+            // کارهای بدون پرونده: مستقیم زیر مشتری
+            val rootTasks = tasksByCase[null].orEmpty()
+            if (rootTasks.isNotEmpty()) {
+                item { SectionLabel("کارها") }
+                items(rootTasks, key = { "t${it.id}" }) { TaskRow(it, stream, onOpenTag) }
+            }
+            item { SectionLabel("پرونده‌ها") }
+            items(open, key = { "c${it.id}" }) { k ->
+                CaseCard(k.id, k.title, k.status, k.dueDay, vm.today, { onOpenCase(k.id) }) {
+                    tasksByCase[k.id].orEmpty().forEach { TaskRow(it, stream, onOpenTag) }
+                }
+            }
+            item { Pill("＋ پروندهٔ تازه", primary = true) { newCase = true } }
+            if (closed.isNotEmpty()) {
+                item {
+                    TextButton({ closedOpen = !closedOpen }) {
+                        Text((if (closedOpen) "▾" else "▸") + Digits.fa(" نهایی و آرشیو (${closed.size})"))
+                    }
+                }
+                if (closedOpen) items(closed, key = { "x${it.id}" }) { k -> CaseCard(k.id, k.title, k.status, k.dueDay, vm.today, { onOpenCase(k.id) }) {} }
+            }
+            historySection(ss, stream, nowMillis, onOpenTag) { overlays.viewer = it }
         }
-        item { SectionLabel("سابقه") }
-        item { EmptyNote("هنوز چیزی ثبت نشده. یادداشت، عکس و کار از مرحلهٔ بعد می‌آید.") }
+        CaptureBar(stream, onPickTarget = { overlays.picker = true }, onNote = { overlays.note = true })
     }
 }
 
 @Composable
-internal fun CaseCard(id: Long, title: String, status: String, dueDay: String?, today: LocalDate, onClick: () -> Unit) {
+internal fun CaseCard(
+    id: Long,
+    title: String,
+    status: String,
+    dueDay: String?,
+    today: LocalDate,
+    onClick: () -> Unit,
+    tasks: @Composable () -> Unit = {},
+) {
     val due = dueDay?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
     val late = due != null && !due.isAfter(today)
     StripeCard(stripeColor(id), onClick = onClick) {
@@ -151,5 +186,6 @@ internal fun CaseCard(id: Long, title: String, status: String, dueDay: String?, 
             if (due != null) add("مهلت " + DayLabel.of(due, today))
         }.joinToString(" · ")
         Text(sub, style = MaterialTheme.typography.bodySmall, color = if (late) MaterialTheme.board.amber else MaterialTheme.board.muted)
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) { tasks() }
     }
 }

@@ -3,6 +3,7 @@ package app.pocketos.board.ui.customers
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.pocketos.board.data.repo.CustomerRepository
+import app.pocketos.board.data.repo.ItemRepository
 import app.pocketos.board.domain.CustomerList
 import app.pocketos.board.domain.CustomerSections
 import app.pocketos.board.domain.CustomerSummary
@@ -31,10 +32,13 @@ data class CustomersState(
 @HiltViewModel
 class CustomersViewModel @Inject constructor(
     private val repo: CustomerRepository,
+    items: ItemRepository,
     private val clock: Clock,
 ) : ViewModel() {
     val query = MutableStateFlow("")
     val alpha = MutableStateFlow(false)
+
+    val inboxCount: StateFlow<Int> = items.observeInboxCount().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     val state: StateFlow<CustomersState> = combine(
         repo.observeSummaries(), repo.observeNotSimilar(), query, alpha,

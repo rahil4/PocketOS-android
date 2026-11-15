@@ -106,6 +106,17 @@ interface CaseDao {
 
     @Query("UPDATE cases SET deletedAt = :ts WHERE id = :id")
     suspend fun setDeleted(id: Long, ts: Long?)
+
+    @Query("UPDATE cases SET lastActivity = :now WHERE id = :id")
+    suspend fun touch(id: Long, now: Long)
+
+    @Query(
+        """SELECT k.id AS id, k.title AS title, k.customerId AS customerId, c.name AS customerName
+           FROM cases k JOIN customers c ON c.id = k.customerId
+           WHERE k.deletedAt IS NULL AND c.deletedAt IS NULL AND k.status NOT IN ('final', 'archive')
+           ORDER BY k.lastActivity DESC LIMIT :limit""",
+    )
+    fun observeRecent(limit: Int): Flow<List<RecentCase>>
 }
 
 /**
@@ -170,4 +181,128 @@ interface BulkDao {
 
     @Query("DELETE FROM customers WHERE deletedAt IS NOT NULL AND deletedAt < :cutoff")
     suspend fun purgeCustomers(cutoff: Long)
+}
+
+data class KindCount(val kind: String, val n: Int)
+
+/** پروندهٔ باز همراه نام مشتری، برای انتخاب‌گر «ثبت در». */
+data class RecentCase(val id: Long, val title: String, val customerId: Long, val customerName: String)
+
+@Dao
+interface ItemDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(i: ItemEntity): Long
+
+    @Update
+    suspend fun update(i: ItemEntity)
+
+    @Query("SELECT * FROM items WHERE id = :id")
+    suspend fun get(id: Long): ItemEntity?
+
+    @Query("SELECT * FROM items WHERE id = :id AND deletedAt IS NULL")
+    fun observe(id: Long): Flow<ItemEntity?>
+
+    @Query(
+        """SELECT * FROM items WHERE deletedAt IS NULL AND pinnedAt IS NOT NULL
+           AND (:customerId IS NULL OR customerId = :customerId) AND (:caseId IS NULL OR caseId = :caseId)
+           ORDER BY pinnedAt DESC""",
+    )
+    fun observePinned(customerId: Long?, caseId: Long?): Flow<List<ItemEntity>>
+
+    @Query(
+        """SELECT * FROM items WHERE deletedAt IS NULL AND pinnedAt IS NULL
+           AND (:customerId IS NULL OR customerId = :customerId) AND (:caseId IS NULL OR caseId = :caseId)
+           AND (:kind IS NULL OR kind = :kind)
+           ORDER BY createdAt DESC, id DESC LIMIT :limit""",
+    )
+    fun observeStream(customerId: Long?, caseId: Long?, kind: String?, limit: Int): Flow<List<ItemEntity>>
+
+    @Query(
+        """SELECT kind, COUNT(*) AS n FROM items WHERE deletedAt IS NULL
+           AND (:customerId IS NULL OR customerId = :customerId) AND (:caseId IS NULL OR caseId = :caseId)
+           GROUP BY kind""",
+    )
+    fun observeKindCounts(customerId: Long?, caseId: Long?): Flow<List<KindCount>>
+
+    @Query(
+        """SELECT * FROM items WHERE customerId IS NULL AND caseId IS NULL AND deletedAt IS NULL
+           ORDER BY createdAt DESC, id DESC LIMIT 80""",
+    )
+    fun observeInbox(): Flow<List<ItemEntity>>
+
+    @Query("SELECT COUNT(*) FROM items WHERE customerId IS NULL AND caseId IS NULL AND deletedAt IS NULL")
+    fun observeInboxCount(): Flow<Int>
+
+    @Query("UPDATE items SET deletedAt = :ts WHERE id = :id")
+    suspend fun setDeleted(id: Long, ts: Long?)
+
+    @Query("UPDATE items SET pinnedAt = :at WHERE id = :id")
+    suspend fun setPinned(id: Long, at: Long?)
+
+    @Query("UPDATE items SET customerId = :customerId, caseId = :caseId WHERE id = :id")
+    suspend fun setTarget(id: Long, customerId: Long?, caseId: Long?)
+
+    @Query("DELETE FROM items WHERE clientId = :clientId")
+    suspend fun deleteByClientId(clientId: String)
+
+    @Query("SELECT searchText FROM items WHERE deletedAt IS NULL AND searchText LIKE '%#%'")
+    suspend fun tagTexts(): List<String>
+
+    @Query("SELECT * FROM items WHERE deletedAt IS NULL AND searchText LIKE :pattern ORDER BY createdAt DESC LIMIT 300")
+    suspend fun searchLike(pattern: String): List<ItemEntity>
+
+    @Query("SELECT filePath FROM items WHERE deletedAt IS NOT NULL AND deletedAt < :cutoff AND filePath IS NOT NULL")
+    suspend fun purgeablePaths(cutoff: Long): List<String>
+}
+
+@Dao
+interface TaskDao {
+    @Insert
+    suspend fun insert(t: TaskEntity): Long
+
+    @Update
+    suspend fun update(t: TaskEntity)
+
+    @Query("SELECT * FROM tasks WHERE id = :id")
+    suspend fun get(id: Long): TaskEntity?
+
+    @Query(
+        """SELECT * FROM tasks WHERE customerId = :customerId AND deletedAt IS NULL AND doneAt IS NULL
+           ORDER BY dueDay IS NULL, dueDay, createdAt""",
+    )
+    fun observeOpenByCustomer(customerId: Long): Flow<List<TaskEntity>>
+
+    @Query(
+        """SELECT * FROM tasks WHERE caseId = :caseId AND deletedAt IS NULL AND doneAt IS NULL
+           ORDER BY dueDay IS NULL, dueDay, createdAt""",
+    )
+    fun observeOpenByCase(caseId: Long): Flow<List<TaskEntity>>
+
+    @Query("SELECT COUNT(*) FROM tasks WHERE caseId = :caseId AND deletedAt IS NULL AND doneAt IS NULL")
+    suspend fun countOpenInCase(caseId: Long): Int
+
+    @Query("UPDATE tasks SET deletedAt = :ts WHERE id = :id")
+    suspend fun setDeleted(id: Long, ts: Long?)
+
+    @Query("UPDATE tasks SET customerId = :customerId, caseId = :caseId WHERE id = :id")
+    suspend fun setTarget(id: Long, customerId: Long?, caseId: Long?)
+
+    /** نوبتِ ساخته‌شده توسط «انجام شد» که کاربر هنوز دست نزده؛ با برداشتن «انجام شد» حذف می‌شود. */
+    @Query("DELETE FROM tasks WHERE spawnedBy = :parentId AND doneAt IS NULL AND anchor IS NULL")
+    suspend fun deleteSpawnedUntouched(parentId: Long)
+
+    @Query("SELECT searchText FROM tasks WHERE deletedAt IS NULL AND searchText LIKE '%#%'")
+    suspend fun tagTexts(): List<String>
+
+    @Query("SELECT * FROM tasks WHERE deletedAt IS NULL AND searchText LIKE :pattern ORDER BY dueDay IS NULL, dueDay LIMIT 300")
+    suspend fun searchLike(pattern: String): List<TaskEntity>
+}
+
+@Dao
+interface PrefDao {
+    @Query("SELECT value FROM prefs WHERE `key` = :key")
+    suspend fun get(key: String): String?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun put(p: PrefEntity)
 }

@@ -1,13 +1,16 @@
 package app.pocketos.board.ui.cases
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,25 +29,40 @@ import app.pocketos.board.domain.DayLabel
 import app.pocketos.board.ui.common.CaseFormDialog
 import app.pocketos.board.ui.common.Chip
 import app.pocketos.board.ui.common.CustomerPickerDialog
-import app.pocketos.board.ui.common.EmptyNote
 import app.pocketos.board.ui.common.PickItem
 import app.pocketos.board.ui.common.Pill
 import app.pocketos.board.ui.common.SectionLabel
 import app.pocketos.board.ui.common.StripeCard
 import app.pocketos.board.ui.common.stripeColor
+import app.pocketos.board.ui.stream.CaptureBar
+import app.pocketos.board.ui.stream.StreamOverlays
+import app.pocketos.board.ui.stream.StreamScope
+import app.pocketos.board.ui.stream.StreamViewModel
+import app.pocketos.board.ui.stream.TaskRow
+import app.pocketos.board.ui.stream.historySection
+import app.pocketos.board.ui.stream.rememberOverlayState
 import app.pocketos.board.ui.theme.board
 import java.time.LocalDate
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun CaseScreen(onBack: () -> Unit, onOpenCustomer: (Long) -> Unit, vm: CaseViewModel = hiltViewModel()) {
+fun CaseScreen(
+    onBack: () -> Unit,
+    onOpenCustomer: (Long) -> Unit,
+    onOpenTag: (String) -> Unit,
+    vm: CaseViewModel = hiltViewModel(),
+    stream: StreamViewModel = hiltViewModel(),
+) {
     val st by vm.state.collectAsStateWithLifecycle()
     val others by vm.others.collectAsStateWithLifecycle()
+    val ss by stream.state.collectAsStateWithLifecycle()
+    val overlays = rememberOverlayState()
     var edit by rememberSaveable { mutableStateOf(false) }
     var move by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(st.loaded, st.case == null) { if (st.loaded && st.case == null) onBack() }
     val k = st.case ?: return
+    LaunchedEffect(k.id) { stream.bind(StreamScope.Case(k.id)) }
     val due = k.dueDay?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
     val late = due != null && !due.isAfter(vm.today) && CaseStatus.of(k.status).open
 
@@ -57,41 +75,45 @@ fun CaseScreen(onBack: () -> Unit, onOpenCustomer: (Long) -> Unit, vm: CaseViewM
             { move = false },
         ) { target -> move = false; vm.moveTo(target.id) }
     }
+    StreamOverlays(stream, overlays)
+    val nowMillis = System.currentTimeMillis()
 
-    LazyColumn(
-        Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 12.dp, bottom = 24.dp),
-    ) {
-        item {
-            TextButton({ onOpenCustomer(k.customerId) }) { Text("‹ " + (st.customer?.name ?: "مشتری")) }
-        }
-        item {
-            StripeCard(stripeColor(k.id)) {
-                Text(k.title, style = MaterialTheme.typography.titleLarge)
-                Text(
-                    if (due != null) "مهلت: " + DayLabel.of(due, vm.today) else "بدون مهلت",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (late) MaterialTheme.board.amber else MaterialTheme.board.muted,
-                )
-            }
-        }
-        item { SectionLabel("وضعیت") }
-        item {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                CaseStatus.entries.forEach { s ->
-                    Chip(s.label, selected = k.status == s.code) { vm.setStatus(s) }
+    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+        LazyColumn(
+            Modifier.weight(1f).padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
+        ) {
+            item { TextButton({ onOpenCustomer(k.customerId) }) { Text("‹ " + (st.customer?.name ?: "مشتری")) } }
+            item {
+                StripeCard(stripeColor(k.id)) {
+                    Text(k.title, style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        if (due != null) "مهلت: " + DayLabel.of(due, vm.today) else "بدون مهلت",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (late) MaterialTheme.board.amber else MaterialTheme.board.muted,
+                    )
                 }
             }
-        }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Pill("ویرایش") { edit = true }
-                Pill("انتقال به مشتری دیگر") { move = true }
-                Pill("حذف") { vm.delete(k.title) }
+            item { SectionLabel("وضعیت") }
+            item {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    CaseStatus.entries.forEach { s -> Chip(s.label, selected = k.status == s.code) { vm.setStatus(s) } }
+                }
             }
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Pill("ویرایش") { edit = true }
+                    Pill("انتقال") { move = true }
+                    Pill("حذف") { vm.delete(k.title) }
+                }
+            }
+            if (ss.tasks.isNotEmpty()) {
+                item { SectionLabel("کارها") }
+                items(ss.tasks, key = { "t${it.id}" }) { TaskRow(it, stream, onOpenTag) }
+            }
+            historySection(ss, stream, nowMillis, onOpenTag) { overlays.viewer = it }
         }
-        item { SectionLabel("سابقه") }
-        item { EmptyNote("هنوز چیزی ثبت نشده. یادداشت، عکس و کار از مرحلهٔ بعد می‌آید.") }
+        CaptureBar(stream, onPickTarget = { overlays.picker = true }, onNote = { overlays.note = true })
     }
 }

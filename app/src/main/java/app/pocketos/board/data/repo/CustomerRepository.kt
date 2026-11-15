@@ -42,7 +42,7 @@ class CustomerRepository @Inject constructor(private val db: BoardDatabase, priv
 
     /** مشتری تازه؛ اگر همنام باشد (حتی بایگانی‌شده) همان برمی‌گردد، بایگانی برداشته می‌شود و تلفنِ خالی پر می‌شود. */
     suspend fun create(name: String, phone: String = ""): Long = db.withTransaction {
-        val clean = Normalize.norm(name)
+        val clean = Normalize.clean(name)
         require(clean.isNotEmpty()) { "نام خالی است" }
         val ph = Phone.normalize(phone)
         val now = clock.millis()
@@ -65,7 +65,7 @@ class CustomerRepository @Inject constructor(private val db: BoardDatabase, priv
 
     suspend fun update(id: Long, name: String, phone: String) = db.withTransaction {
         val c = customers.get(id) ?: return@withTransaction
-        val clean = Normalize.norm(name).ifEmpty { c.name }
+        val clean = Normalize.clean(name).ifEmpty { c.name }
         val ph = Phone.normalize(phone)
         customers.update(c.copy(name = clean, phone = ph, searchText = customerSearchText(clean, ph), lastActivity = clock.millis(), archivedAt = null))
     }

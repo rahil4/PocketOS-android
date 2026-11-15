@@ -9,6 +9,13 @@ object Normalize {
     fun norm(s: String?): String =
         SPACES.replace(Digits.en(s.orEmpty()).replace('‌', ' ').replace('ي', 'ی').replace('ك', 'ک'), " ").trim()
 
+    /** برای ذخیره: فاصله‌های اضافه حذف می‌شود ولی نیم‌فاصله و ارقام کاربر دست‌نخورده می‌ماند. */
+    fun clean(s: String?): String = SPACES.replace(s.orEmpty(), " ").trim()
+
+    /** مثل norm ولی طول و جای نویسه‌ها حفظ می‌شود (برای بریدن بخشی از متن اصلی). */
+    internal fun aligned(s: String): String =
+        Digits.en(s).replace('\u200c', ' ').replace('ي', 'ی').replace('ك', 'ک')
+
     /** کلید مقایسه و جست‌وجو: norm + حروف کوچک. */
     fun key(s: String?): String = norm(s).lowercase()
 

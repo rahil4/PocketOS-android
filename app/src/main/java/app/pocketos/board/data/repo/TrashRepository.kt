@@ -1,6 +1,7 @@
 package app.pocketos.board.data.repo
 
 import androidx.room.withTransaction
+import app.pocketos.board.data.FileStore
 import app.pocketos.board.data.db.BoardDatabase
 import app.pocketos.board.data.db.CaseEntity
 import app.pocketos.board.data.db.CustomerEntity
@@ -10,7 +11,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TrashRepository @Inject constructor(private val db: BoardDatabase, private val clock: Clock) {
+class TrashRepository @Inject constructor(
+    private val db: BoardDatabase,
+    private val clock: Clock,
+    private val files: FileStore,
+) {
+    private val items = db.itemDao()
     private val customers = db.customerDao()
     private val cases = db.caseDao()
     private val bulk = db.bulkDao()
@@ -19,9 +25,15 @@ class TrashRepository @Inject constructor(private val db: BoardDatabase, private
 
     fun deletedCases(): Flow<List<CaseEntity>> = cases.observeDeleted()
 
-    /** پاک‌سازی واقعیِ هر چیزی که بیش از ۳۰ روز در سطل بوده. (حذف فایل‌ها با مرحلهٔ ۳ می‌آید.) */
-    suspend fun purge() = db.withTransaction {
+    /** پاک‌سازی واقعیِ هر چیزی که بیش از ۳۰ روز در سطل بوده، همراه فایل‌هایشان. */
+    suspend fun purge() {
         val cutoff = clock.millis() - RETENTION_DAYS * DAY
+        val paths = items.purgeablePaths(cutoff)
+        purgeRows(cutoff)
+        paths.forEach { files.delete(it) }
+    }
+
+    private suspend fun purgeRows(cutoff: Long) = db.withTransaction {
         bulk.purgeItems(cutoff)
         bulk.purgeTasks(cutoff)
         bulk.purgeCases(cutoff)

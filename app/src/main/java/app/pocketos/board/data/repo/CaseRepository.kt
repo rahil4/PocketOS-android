@@ -19,10 +19,14 @@ class CaseRepository @Inject constructor(private val db: BoardDatabase, private 
 
     fun observe(id: Long): Flow<CaseEntity?> = cases.observe(id)
 
+    suspend fun get(id: Long): CaseEntity? = cases.get(id)
+
+    fun observeRecent(limit: Int) = cases.observeRecent(limit)
+
     fun observeByCustomer(customerId: Long): Flow<List<CaseEntity>> = cases.observeByCustomer(customerId)
 
     suspend fun create(customerId: Long, title: String, due: LocalDate? = null): Long = db.withTransaction {
-        val clean = Normalize.norm(title)
+        val clean = Normalize.clean(title)
         require(clean.isNotEmpty()) { "عنوان خالی است" }
         val now = clock.millis()
         val id = cases.insert(
@@ -37,7 +41,7 @@ class CaseRepository @Inject constructor(private val db: BoardDatabase, private 
 
     suspend fun update(id: Long, title: String, due: LocalDate?) = db.withTransaction {
         val c = cases.get(id) ?: return@withTransaction
-        val clean = Normalize.norm(title).ifEmpty { c.title }
+        val clean = Normalize.clean(title).ifEmpty { c.title }
         val now = clock.millis()
         cases.update(c.copy(title = clean, dueDay = due?.toString(), searchText = Normalize.key(clean), lastActivity = now))
         customers.touch(c.customerId, now)

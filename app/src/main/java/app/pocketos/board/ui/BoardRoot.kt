@@ -1,5 +1,6 @@
 package app.pocketos.board.ui
 
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -38,6 +39,8 @@ import app.pocketos.board.ui.cases.CaseScreen
 import app.pocketos.board.ui.customers.CustomerScreen
 import app.pocketos.board.ui.customers.CustomersScreen
 import app.pocketos.board.ui.home.HomeScreen
+import app.pocketos.board.ui.inbox.InboxScreen
+import app.pocketos.board.ui.tags.TagScreen
 import app.pocketos.board.ui.trash.TrashScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -52,6 +55,8 @@ private enum class Tab(val route: String, val label: Int, val icon: ImageVector)
 private const val CUSTOMER = "customer/{id}"
 private const val CASE = "case/{id}"
 private const val TRASH = "trash"
+private const val INBOX = "inbox"
+private const val TAG = "tag/{name}"
 
 @HiltViewModel
 class RootViewModel @Inject constructor(val messenger: UiMessenger) : ViewModel()
@@ -72,7 +77,7 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
     }
 
     // صفحه‌های زیرمجموعهٔ «مشتری‌ها» تب مشتری‌ها را روشن نگه می‌دارند.
-    val inCustomers = current == Tab.Customers.route || current == CUSTOMER || current == CASE || current == TRASH
+    val inCustomers = current == Tab.Customers.route || current == CUSTOMER || current == CASE || current == TRASH || current == INBOX || current == TAG
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -105,15 +110,26 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
                     onOpenCustomer = { nav.navigate("customer/$it") },
                     onOpenCase = { nav.navigate("case/$it") },
                     onOpenTrash = { nav.navigate(TRASH) },
+                    onOpenInbox = { nav.navigate(INBOX) },
                 )
             }
             composable(CUSTOMER, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
-                CustomerScreen(onBack = { nav.popBackStack() }, onOpenCase = { nav.navigate("case/$it") })
+                CustomerScreen(
+                    onBack = { nav.popBackStack() }, onOpenCase = { nav.navigate("case/$it") },
+                    onOpenTag = { nav.navigate("tag/" + Uri.encode(it)) },
+                )
             }
             composable(CASE, arguments = listOf(navArgument("id") { type = NavType.LongType })) {
-                CaseScreen(onBack = { nav.popBackStack() }, onOpenCustomer = { nav.navigate("customer/$it") })
+                CaseScreen(
+                    onBack = { nav.popBackStack() }, onOpenCustomer = { nav.navigate("customer/$it") },
+                    onOpenTag = { nav.navigate("tag/" + Uri.encode(it)) },
+                )
             }
             composable(TRASH) { TrashScreen(onBack = { nav.popBackStack() }) }
+            composable(INBOX) { InboxScreen(onBack = { nav.popBackStack() }, onOpenTag = { nav.navigate("tag/" + Uri.encode(it)) }) }
+            composable(TAG, arguments = listOf(navArgument("name") { type = NavType.StringType })) {
+                TagScreen(onBack = { nav.popBackStack() })
+            }
         }
     }
 }

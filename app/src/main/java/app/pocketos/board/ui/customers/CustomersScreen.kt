@@ -61,11 +61,13 @@ fun CustomersScreen(
     onOpenCustomer: (Long) -> Unit,
     onOpenCase: (Long) -> Unit,
     onOpenTrash: () -> Unit,
+    onOpenInbox: () -> Unit,
     vm: CustomersViewModel = hiltViewModel(),
 ) {
     val st by vm.state.collectAsStateWithLifecycle()
     val q by vm.query.collectAsStateWithLifecycle()
     val alpha by vm.alpha.collectAsStateWithLifecycle()
+    val inbox by vm.inboxCount.collectAsStateWithLifecycle()
     var showNew by rememberSaveable { mutableStateOf(false) }
     var newName by rememberSaveable { mutableStateOf("") }
     var limit by rememberSaveable { mutableIntStateOf(PAGE) }
@@ -134,6 +136,17 @@ fun CustomersScreen(
                 if (results.size > limit) item("more") { TextButton({ limit += PAGE }) { Text("نمایش بیشتر") } }
                 if (results.isEmpty()) item("none") { Text("نتیجه‌ای نیست", color = MaterialTheme.board.muted, modifier = Modifier.padding(8.dp)) }
             } else {
+                if (inbox > 0) {
+                    item("inbox") {
+                        Row(
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.board.slate).clickable(onClick = onOpenInbox).padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("صندوق ورودی", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            Chip(Digits.fa(inbox), selected = true)
+                        }
+                    }
+                }
                 // مرتب‌سازی: شبیه هم‌اند / مشتری خالی
                 st.similar?.let { (a, b) ->
                     item("similar") {

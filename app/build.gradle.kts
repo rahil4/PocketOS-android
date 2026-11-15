@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.coil.compose)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

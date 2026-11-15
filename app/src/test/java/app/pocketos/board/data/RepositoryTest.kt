@@ -3,6 +3,7 @@ package app.pocketos.board.data
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import app.pocketos.board.data.FileStore
 import app.pocketos.board.data.db.BoardDatabase
 import app.pocketos.board.data.db.ItemEntity
 import app.pocketos.board.data.db.TaskEntity
@@ -24,16 +25,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
-
-/** ساعت دستی تا زمان‌ها قابل کنترل باشند. */
-private class MutableClock(var now: Long) : Clock() {
-    override fun getZone() = ZoneOffset.UTC
-    override fun withZone(zone: java.time.ZoneId?) = this
-    override fun instant(): Instant = Instant.ofEpochMilli(now)
-    override fun millis(): Long = now
-}
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -50,7 +41,7 @@ class RepositoryTest {
         db = Room.inMemoryDatabaseBuilder(ctx, BoardDatabase::class.java).allowMainThreadQueries().build()
         customers = CustomerRepository(db, clock)
         cases = CaseRepository(db, clock)
-        trash = TrashRepository(db, clock)
+        trash = TrashRepository(db, clock, FileStore(ctx))
     }
 
     @After
