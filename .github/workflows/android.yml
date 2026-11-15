@@ -20,6 +20,8 @@ jobs:
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
       - name: Unit tests
         run: ./gradlew :domain:test --stacktrace
+      - name: App unit tests (Room, Robolectric)
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
       - name: Build debug APK
         run: ./gradlew :app:assembleDebug --stacktrace
       - name: Upload APK
@@ -33,4 +35,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: domain/build/reports/tests
+          path: |
+            domain/build/reports/tests
+            app/build/reports/tests

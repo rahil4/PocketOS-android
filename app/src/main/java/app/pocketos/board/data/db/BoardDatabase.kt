@@ -16,6 +16,10 @@ import androidx.room.RoomDatabase
     exportSchema = true,
 )
 abstract class BoardDatabase : RoomDatabase() {
+    abstract fun customerDao(): CustomerDao
+    abstract fun caseDao(): CaseDao
+    abstract fun bulkDao(): BulkDao
+
     companion object {
         const val NAME = "board.db"
     }
