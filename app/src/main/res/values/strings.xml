@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">دفتر</string>
+    <string name="tab_home">خانه</string>
+    <string name="tab_calendar">تقویم</string>
+    <string name="tab_customers">مشتری‌ها</string>
+</resources>
