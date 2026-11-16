@@ -34,6 +34,7 @@ import app.pocketos.board.domain.Digits
 import app.pocketos.board.domain.Phone
 import app.pocketos.board.ui.common.Avatar
 import app.pocketos.board.ui.common.CaseFormDialog
+import app.pocketos.board.ui.common.CustomerCard
 import app.pocketos.board.ui.common.CustomerFormDialog
 import app.pocketos.board.ui.common.CustomerPickerDialog
 import app.pocketos.board.ui.common.PickItem
@@ -99,15 +100,15 @@ fun CustomerScreen(
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         LazyColumn(
-            Modifier.weight(1f).padding(horizontal = 16.dp),
+            Modifier.weight(1f).padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
         ) {
             item { TextButton(onBack) { Text("‹ مشتری‌ها") } }
             item {
-                StripeCard(stripeColor(c.id)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Avatar(c.name, c.id, 48.dp)
+                CustomerCard(radius = 18.dp) {
+                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Avatar(c.name, c.id, 54.dp)
                         Column(Modifier.weight(1f)) {
                             Text((if (c.pinnedAt != null) "★ " else "") + c.name, style = MaterialTheme.typography.titleLarge)
                             if (c.phone.isNotBlank()) Text(Phone.display(c.phone), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted)
@@ -163,7 +164,7 @@ fun CustomerScreen(
             }
             historySection(ss, stream, nowMillis, onOpenTag) { overlays.viewer = it }
         }
-        CaptureBar(stream, onPickTarget = { overlays.picker = true }, onNote = { overlays.note = true })
+        CaptureBar(stream, onPickTarget = { overlays.picker = true }, onNote = { overlays.openNote(false) }, onTask = { overlays.openNote(true) })
     }
 }
 

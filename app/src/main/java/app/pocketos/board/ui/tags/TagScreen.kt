@@ -1,6 +1,7 @@
 package app.pocketos.board.ui.tags
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,12 +48,12 @@ fun TagScreen(onBack: () -> Unit, vm: TagViewModel = hiltViewModel()) {
     val r = st.results
 
     LazyColumn(
-        Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 16.dp),
+        Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp),
     ) {
         item { TextButton(onBack) { Text("‹ بازگشت") } }
-        item { Text("#${vm.tag}", style = MaterialTheme.typography.headlineMedium) }
+        item { Text("#${vm.tag}", style = MaterialTheme.typography.titleLarge) }
         if (r != null && r.openTasks.isEmpty() && r.notes.isEmpty() && r.doneTasks.isEmpty()) {
             item { EmptyNote("چیزی با این برچسب نیست.") }
         }
@@ -62,11 +63,11 @@ fun TagScreen(onBack: () -> Unit, vm: TagViewModel = hiltViewModel()) {
                 val due = t.dueDay?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
                 val late = due != null && !due.isAfter(vm.today)
                 Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.board.slate).padding(4.dp),
+                    Modifier.fillMaxWidth().padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(Modifier.size(40.dp).clickable { vm.done(t.id) }, contentAlignment = Alignment.Center) {
-                        Box(Modifier.size(20.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surface))
+                        Box(Modifier.size(24.dp).clip(CircleShape).border(2.dp, MaterialTheme.board.muted, CircleShape))
                     }
                     Column(Modifier.weight(1f)) {
                         Text(Digits.fa(Tags.strip(t.title).ifEmpty { t.title }), style = MaterialTheme.typography.bodyMedium)
@@ -84,7 +85,7 @@ fun TagScreen(onBack: () -> Unit, vm: TagViewModel = hiltViewModel()) {
             items(r.notes, key = { "n${it.id}" }) { n ->
                 Text(
                     Digits.fa(Tags.strip(n.text).ifEmpty { n.text }), style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.board.slate).padding(12.dp),
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).border(1.dp, MaterialTheme.board.line, RoundedCornerShape(16.dp)).padding(12.dp),
                 )
             }
         }

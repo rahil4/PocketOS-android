@@ -6,6 +6,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,6 +39,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -54,6 +59,8 @@ import app.pocketos.board.ui.common.Chip
 import app.pocketos.board.ui.common.EmptyNote
 import app.pocketos.board.ui.common.Pill
 import app.pocketos.board.ui.common.SectionLabel
+import app.pocketos.board.ui.common.SurfaceCard
+import app.pocketos.board.ui.common.TagChip
 import app.pocketos.board.ui.theme.board
 import coil.compose.AsyncImage
 import java.time.LocalDate
@@ -68,7 +75,7 @@ private fun toast(ctx: android.content.Context, msg: String) = Toast.makeText(ct
 
 // ───────────────────────── کارها ─────────────────────────
 
-/** یک کار: حلقهٔ «انجام شد»، عنوان بدون #، چیپ برچسب، روز و تکرار، منوی ⋯ */
+/** یک کار (مثل وب‌اپ): حلقهٔ «انجام شد»، عنوان با برچسب سبزِ کوچک کنارش، زیرنویس روز/تکرار، منوی ⋯ و خط جداکننده. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TaskRow(
@@ -93,48 +100,53 @@ fun TaskRow(
         "move" -> TargetPickerDialog(vm, "انتقال کار به…", { dialog = "" }) { vm.moveTask(task, it); dialog = "" }
     }
 
-    Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surface).padding(start = 4.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.Top,
-    ) {
-        Box(Modifier.size(40.dp).clickable { if (done) vm.undone(task) else vm.done(task) }, contentAlignment = Alignment.Center) {
-            Box(
-                Modifier.size(20.dp).clip(CircleShape).background(if (done) MaterialTheme.board.ok else MaterialTheme.board.slate)
-                    .padding(2.dp).background(if (done) MaterialTheme.board.ok else MaterialTheme.colorScheme.surface, CircleShape),
-            )
-        }
-        Column(Modifier.weight(1f).padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                Digits.fa(title), style = MaterialTheme.typography.bodyMedium,
-                textDecoration = if (done) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
-                color = if (done) MaterialTheme.board.muted else MaterialTheme.colorScheme.onSurface,
-            )
-            val sub = buildList {
-                if (due != null && showDue) add(DayLabel.of(due, today))
-                if (task.repeat != null) add(When.repeatLabel(task.repeat))
-            }.joinToString(" · ")
-            if (sub.isNotEmpty()) {
-                Text(
-                    (if (late && due != null && due.isBefore(today)) "از ${DayLabel.of(due, today)} مانده" else sub),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (late) MaterialTheme.board.amber else MaterialTheme.board.muted,
-                )
+    Column(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.Top) {
+            Box(Modifier.size(44.dp).clickable { if (done) vm.undone(task) else vm.done(task) }, contentAlignment = Alignment.Center) {
+                val ringColor = if (done) MaterialTheme.board.ok else if (late) MaterialTheme.board.amber else MaterialTheme.board.muted
+                Box(
+                    Modifier.size(24.dp).clip(CircleShape)
+                        .background(if (done) MaterialTheme.board.ok else Color.Transparent)
+                        .border(2.dp, ringColor, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (done) Text("✓", color = MaterialTheme.board.accentInk, fontSize = 13.sp, fontWeight = FontWeight.Bold, lineHeight = 13.sp)
+                }
             }
-            if (tags.isNotEmpty()) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) { tags.forEach { Chip("#$it") { onTag(it) } } }
+            Column(Modifier.weight(1f).padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        Digits.fa(title), style = MaterialTheme.typography.bodyLarge,
+                        textDecoration = if (done) TextDecoration.LineThrough else null,
+                        color = if (done) MaterialTheme.board.muted else MaterialTheme.colorScheme.onSurface,
+                    )
+                    tags.forEach { TagChip(it) { onTag(it) } }
+                }
+                val sub = buildList {
+                    if (due != null && showDue) add(DayLabel.of(due, today))
+                    if (task.repeat != null) add(When.repeatLabel(task.repeat))
+                }.joinToString(" · ")
+                if (sub.isNotEmpty()) {
+                    Text(
+                        (if (late && due != null && due.isBefore(today)) "از ${DayLabel.of(due, today)} مانده" else sub),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (late) MaterialTheme.board.amber else MaterialTheme.board.muted,
+                    )
+                }
+                extra?.invoke()
             }
-            extra?.invoke()
-        }
-        Box {
-            TextButton({ menu = true }) { Text("⋯") }
-            DropdownMenu(menu, { menu = false }) {
-                DropdownMenuItem({ Text("تغییر روز…") }, { menu = false; dialog = "day" })
-                DropdownMenuItem({ Text("ویرایش") }, { menu = false; dialog = "edit" })
-                if (task.repeat != null) DropdownMenuItem({ Text("متوقف کردن تکرار") }, { menu = false; vm.stopRepeat(task) })
-                DropdownMenuItem({ Text("انتقال به پروندهٔ دیگر…") }, { menu = false; dialog = "move" })
-                DropdownMenuItem({ Text("حذف") }, { menu = false; vm.deleteTask(task) })
+            Box {
+                TextButton({ menu = true }) { Text("⋯", color = MaterialTheme.board.muted) }
+                DropdownMenu(menu, { menu = false }) {
+                    DropdownMenuItem({ Text("تغییر روز…") }, { menu = false; dialog = "day" })
+                    DropdownMenuItem({ Text("ویرایش") }, { menu = false; dialog = "edit" })
+                    if (task.repeat != null) DropdownMenuItem({ Text("متوقف کردن تکرار") }, { menu = false; vm.stopRepeat(task) })
+                    DropdownMenuItem({ Text("انتقال به پروندهٔ دیگر…") }, { menu = false; dialog = "move" })
+                    DropdownMenuItem({ Text("حذف") }, { menu = false; vm.deleteTask(task) })
+                }
             }
         }
+        HorizontalDivider(color = MaterialTheme.board.line)
     }
 }
 
@@ -201,14 +213,15 @@ fun ItemCard(item: ItemEntity, vm: StreamViewModel, nowMillis: Long, onTag: (Str
     if (item.kind == ItemKind.EVENT) {
         Text(
             "✓ " + Digits.fa(item.text) + " · " + stamp,
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp),
         )
         return
     }
 
+    SurfaceCard {
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.board.slate).padding(horizontal = 12.dp, vertical = 8.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -270,6 +283,7 @@ fun ItemCard(item: ItemEntity, vm: StreamViewModel, nowMillis: Long, onTag: (Str
             else -> NoteText(item.text, onTag)
         }
     }
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -277,8 +291,10 @@ fun ItemCard(item: ItemEntity, vm: StreamViewModel, nowMillis: Long, onTag: (Str
 private fun NoteText(text: String, onTag: (String) -> Unit) {
     val tags = Tags.tagsIn(text)
     val shown = if (tags.isEmpty()) text else Tags.strip(text).ifEmpty { text }
-    Text(Digits.fa(shown), style = MaterialTheme.typography.bodyMedium)
-    if (tags.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) { tags.forEach { Chip("#$it") { onTag(it) } } }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+        Text(Digits.fa(shown), style = MaterialTheme.typography.bodyLarge)
+        tags.forEach { TagChip(it) { onTag(it) } }
+    }
 }
 
 private fun openFile(ctx: android.content.Context, files: FileStore, item: ItemEntity) {

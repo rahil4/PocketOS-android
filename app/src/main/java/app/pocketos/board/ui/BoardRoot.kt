@@ -1,16 +1,22 @@
 package app.pocketos.board.ui
 
 import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import app.pocketos.board.ui.theme.board
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -22,7 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -46,10 +51,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 
-private enum class Tab(val route: String, val label: Int, val icon: ImageVector) {
-    Home("home", R.string.tab_home, Icons.Filled.Home),
-    Calendar("calendar", R.string.tab_calendar, Icons.Filled.DateRange),
-    Customers("customers", R.string.tab_customers, Icons.Filled.Person),
+private enum class Tab(val route: String, val label: Int, val icon: Int) {
+    Home("home", R.string.tab_home, R.drawable.ic_tab_home),
+    Calendar("calendar", R.string.tab_calendar, R.drawable.ic_cal),
+    Customers("customers", R.string.tab_customers, R.drawable.ic_tab_people),
 }
 
 private const val CUSTOMER = "customer/{id}"
@@ -83,21 +88,26 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                Tab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = if (tab == Tab.Customers) inCustomers else current == tab.route,
-                        onClick = {
-                            nav.navigate(tab.route) {
-                                popUpTo(nav.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = tab != Tab.Customers
-                            }
-                        },
-                        icon = { Icon(tab.icon, contentDescription = null) },
-                        label = { Text(stringResource(tab.label)) },
-                        colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.primaryContainer),
-                    )
+            Column(Modifier.background(MaterialTheme.colorScheme.surface)) {
+                HorizontalDivider(color = MaterialTheme.board.line)
+                Row(Modifier.fillMaxWidth().navigationBarsPadding()) {
+                    Tab.entries.forEach { tab ->
+                        val on = if (tab == Tab.Customers) inCustomers else current == tab.route
+                        val color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.board.muted
+                        Column(
+                            Modifier.weight(1f).clickable {
+                                nav.navigate(tab.route) {
+                                    popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = tab != Tab.Customers
+                                }
+                            }.padding(top = 7.dp, bottom = 6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Icon(painterResource(tab.icon), contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+                            Text(stringResource(tab.label), color = color, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Normal)
+                        }
+                    }
                 }
             }
         },

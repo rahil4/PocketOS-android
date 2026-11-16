@@ -38,16 +38,16 @@ fun InboxScreen(onBack: () -> Unit, onOpenTag: (String) -> Unit, vm: StreamViewM
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         LazyColumn(
-            Modifier.weight(1f).padding(horizontal = 16.dp),
+            Modifier.weight(1f).padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
         ) {
             item { TextButton(onBack) { Text("‹ بازگشت") } }
-            item { Text("صندوق ورودی", style = MaterialTheme.typography.headlineMedium) }
+            item { Text("صندوق ورودی", style = MaterialTheme.typography.titleLarge) }
             item { Text("هر چیزی را خام ثبت کن؛ بعداً با «⋯ ← انتقال» جایش را مشخص کن.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted) }
             if (st.loaded && st.items.isEmpty()) item { EmptyNote("صندوق ورودی خالی است.") }
             items(st.items, key = { it.id }) { ItemCard(it, vm, now, onOpenTag) { overlays.viewer = it } }
         }
-        CaptureBar(vm, onPickTarget = { overlays.picker = true }, onNote = { overlays.note = true })
+        CaptureBar(vm, onPickTarget = { overlays.picker = true }, onNote = { overlays.openNote(false) }, onTask = { overlays.openNote(true) })
     }
 }

@@ -3,6 +3,7 @@ package app.pocketos.board.ui.customers
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -87,10 +89,10 @@ fun CustomersScreen(
         )
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 16.dp)) {
+    Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("مشتری‌ها", style = MaterialTheme.typography.headlineMedium)
+                Text("مشتری‌ها", style = MaterialTheme.typography.titleLarge)
                 if (st.loaded) {
                     Text(
                         Digits.fa("${st.total} مشتری · ${st.withTasks} کار دارند"),
@@ -139,7 +141,7 @@ fun CustomersScreen(
                 if (inbox > 0) {
                     item("inbox") {
                         Row(
-                            Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.board.slate).clickable(onClick = onOpenInbox).padding(12.dp),
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).border(1.dp, MaterialTheme.board.line, RoundedCornerShape(16.dp)).clickable(onClick = onOpenInbox).padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text("صندوق ورودی", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -151,7 +153,7 @@ fun CustomersScreen(
                 st.similar?.let { (a, b) ->
                     item("similar") {
                         Column(
-                            Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.board.slate).padding(12.dp),
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.board.slate).border(1.dp, MaterialTheme.board.line, RoundedCornerShape(16.dp)).padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Text("شبیه هم‌اند؟", style = MaterialTheme.typography.labelLarge)
@@ -231,19 +233,21 @@ private fun CustomerRow(
     Column(
         Modifier
             .fillMaxWidth()
+            .alpha(if (dim) 0.66f else 1f)
             .clip(shape)
-            .background(MaterialTheme.board.slate)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.board.line, shape)
             .clickable { onOpen(s.id) }
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Avatar(s.name, s.id)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Avatar(s.name, s.id, 42.dp)
             Column(Modifier.weight(1f)) {
                 Text(
                     (if (s.archived) "بایگانی · " else "") + s.name,
                     style = MaterialTheme.typography.titleMedium,
-                    color = if (dim) MaterialTheme.board.muted else MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 val sub = buildList {
                     if (s.openCases > 0) add(faCount(s.openCases, "پرونده"))
@@ -255,17 +259,17 @@ private fun CustomerRow(
             if (s.openTasks > 0) Chip(Digits.fa(s.openTasks), selected = late, amber = late)
             if (s.phone.isNotBlank()) {
                 androidx.compose.foundation.layout.Box(
-                    Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surface)
+                    Modifier.size(34.dp).clip(CircleShape).border(1.dp, MaterialTheme.board.cuLine, CircleShape)
                         .clickable { context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${s.phone}"))) },
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Filled.Phone, contentDescription = "تماس", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp)) }
+                ) { Icon(Icons.Filled.Phone, contentDescription = "تماس", tint = MaterialTheme.board.cu, modifier = Modifier.size(17.dp)) }
             }
         }
         if (s.cases.isNotEmpty()) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 s.cases.forEach { c ->
                     Row(
-                        Modifier.clip(RoundedCornerShape(99.dp)).background(MaterialTheme.colorScheme.surface)
+                        Modifier.clip(RoundedCornerShape(99.dp)).background(MaterialTheme.board.slate)
                             .clickable { onOpenCase(c.id) }.padding(end = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {

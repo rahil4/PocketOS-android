@@ -14,17 +14,18 @@ val Vazirmatn = FontFamily(
     Font(R.font.vazirmatn_bold, FontWeight.Bold),
 )
 
-private fun style(size: Int, weight: FontWeight = FontWeight.Normal, line: Int = size + 10) =
-    TextStyle(fontFamily = Vazirmatn, fontWeight = weight, fontSize = size.sp, lineHeight = line.sp)
+private fun style(size: Float, weight: FontWeight = FontWeight.Normal, lineHeight: Float = size * 1.55f) =
+    TextStyle(fontFamily = Vazirmatn, fontWeight = weight, fontSize = size.sp, lineHeight = lineHeight.sp)
 
+/** اندازه‌ها از وب‌اپ: متن ۱۷، عنوان ۱۹، سلام ۲۳، زیرنویس ۱۳٫۵، چیپ ۱۲٫۵. */
 val BoardTypography = Typography(
-    headlineMedium = style(24, FontWeight.Bold, 34),
-    titleLarge = style(20, FontWeight.Bold, 30),
-    titleMedium = style(16, FontWeight.Medium, 26),
-    bodyLarge = style(16, line = 26),
-    bodyMedium = style(14, line = 24),
-    bodySmall = style(12, line = 20),
-    labelLarge = style(14, FontWeight.Medium, 22),
-    labelMedium = style(12, FontWeight.Medium, 18),
-    labelSmall = style(11, FontWeight.Medium, 16),
+    headlineMedium = style(23f, FontWeight.Medium, 34f),
+    titleLarge = style(19f, FontWeight.Bold, 29f),
+    titleMedium = style(16.5f, FontWeight.Medium, 26f),
+    bodyLarge = style(17f, lineHeight = 27f),
+    bodyMedium = style(15.5f, lineHeight = 25f),
+    bodySmall = style(13.5f, lineHeight = 21f),
+    labelLarge = style(14.5f, FontWeight.Medium, 22f),
+    labelMedium = style(12.5f, FontWeight.Medium, 19f),
+    labelSmall = style(11.5f, FontWeight.Medium, 17f),
 )

@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.pocketos.board.domain.CaseStatus
 import app.pocketos.board.domain.DayLabel
 import app.pocketos.board.ui.common.CaseFormDialog
+import app.pocketos.board.ui.common.Crumb
 import app.pocketos.board.ui.common.Chip
 import app.pocketos.board.ui.common.CustomerPickerDialog
 import app.pocketos.board.ui.common.PickItem
@@ -80,11 +81,16 @@ fun CaseScreen(
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         LazyColumn(
-            Modifier.weight(1f).padding(horizontal = 16.dp),
+            Modifier.weight(1f).padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
         ) {
-            item { TextButton({ onOpenCustomer(k.customerId) }) { Text("‹ " + (st.customer?.name ?: "مشتری")) } }
+            item {
+                Row(Modifier.padding(top = 4.dp)) {
+                    st.customer?.let { Crumb(it.name, it.id) { onOpenCustomer(k.customerId) } }
+                        ?: TextButton({ onOpenCustomer(k.customerId) }) { Text("‹ مشتری") }
+                }
+            }
             item {
                 StripeCard(stripeColor(k.id)) {
                     Text(k.title, style = MaterialTheme.typography.titleLarge)
@@ -114,6 +120,6 @@ fun CaseScreen(
             }
             historySection(ss, stream, nowMillis, onOpenTag) { overlays.viewer = it }
         }
-        CaptureBar(stream, onPickTarget = { overlays.picker = true }, onNote = { overlays.note = true })
+        CaptureBar(stream, onPickTarget = { overlays.picker = true }, onNote = { overlays.openNote(false) }, onTask = { overlays.openNote(true) })
     }
 }

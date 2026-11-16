@@ -7,16 +7,23 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,22 +39,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.pocketos.board.R
 import app.pocketos.board.data.AudioRecorder
 import app.pocketos.board.data.StoredFile
 import app.pocketos.board.domain.Digits
 import app.pocketos.board.ui.theme.board
 import kotlinx.coroutines.delay
 
-/** دک ثبت: «ثبت در: …» و دکمه‌های یادداشت، عکس، صدا، فایل، موقعیت. */
+/**
+ * دک ثبت مثل وب‌اپ: «ثبت در: …» و پنج دکمهٔ آیکونی (یادداشت، صدا، عکس، کار زمان‌دار، بیشتر).
+ * «بیشتر»: فایل، عکس از گالری، موقعیت من.
+ */
 @Composable
-fun CaptureBar(vm: StreamViewModel, onPickTarget: () -> Unit, onNote: () -> Unit) {
+fun CaptureBar(vm: StreamViewModel, onPickTarget: () -> Unit, onNote: () -> Unit, onTask: () -> Unit) {
     val ctx = LocalContext.current
     val label by vm.targetLabel.collectAsStateWithLifecycle()
-    var photoChoice by remember { mutableStateOf(false) }
     var recording by remember { mutableStateOf(false) }
+    var more by remember { mutableStateOf(false) }
     var camFile by remember { mutableStateOf<StoredFile?>(null) }
 
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
@@ -66,61 +78,63 @@ fun CaptureBar(vm: StreamViewModel, onPickTarget: () -> Unit, onNote: () -> Unit
 
     fun has(p: String) = ContextCompat.checkSelfPermission(ctx, p) == PackageManager.PERMISSION_GRANTED
 
-    if (photoChoice) {
-        AlertDialog(
-            onDismissRequest = { photoChoice = false },
-            title = { Text("عکس") },
-            text = { Text("عکس با کیفیت اصلی ذخیره می‌شود و کوچک نمی‌شود.") },
-            confirmButton = {
-                TextButton({
-                    photoChoice = false
-                    val f = vm.files.create("photo.jpg", "image/jpeg")
-                    camFile = f
-                    camera.launch(vm.files.uriFor(f.path))
-                }) { Text("دوربین") }
-            },
-            dismissButton = {
-                TextButton({
-                    photoChoice = false
-                    gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                }) { Text("گالری") }
-            },
-        )
-    }
     if (recording) RecordDialog(vm) { recording = false }
 
-    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).navigationBarsPadding()) {
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).navigationBarsPadding()) {
+        HorizontalDivider(color = MaterialTheme.board.line)
         Row(
-            Modifier.fillMaxWidth().clickable(onClick = onPickTarget).padding(horizontal = 16.dp, vertical = 8.dp),
+            Modifier.fillMaxWidth().clickable(onClick = onPickTarget).padding(horizontal = 20.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("ثبت در:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.board.muted)
+            Text("ثبت در", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.board.muted)
             Text("  $label ▾", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f), maxLines = 1)
         }
-        Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Btn("یادداشت", Modifier.weight(1f), onNote)
-            Btn("عکس", Modifier.weight(1f)) { photoChoice = true }
-            Btn("صدا", Modifier.weight(1f)) {
+        Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            IconBtn(R.drawable.ic_note, "یادداشت", main = true, modifier = Modifier.weight(1f), onClick = onNote)
+            IconBtn(R.drawable.ic_mic, "صدا", modifier = Modifier.weight(1f)) {
                 if (has(Manifest.permission.RECORD_AUDIO)) recording = true else micPermission.launch(Manifest.permission.RECORD_AUDIO)
             }
-            Btn("فایل", Modifier.weight(1f)) { docs.launch(arrayOf("*/*")) }
-            Btn("موقعیت", Modifier.weight(1f)) {
-                if (has(Manifest.permission.ACCESS_FINE_LOCATION) || has(Manifest.permission.ACCESS_COARSE_LOCATION)) vm.addLocation()
-                else locPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+            IconBtn(R.drawable.ic_cam, "عکس", modifier = Modifier.weight(1f)) {
+                val f = vm.files.create("photo.jpg", "image/jpeg")
+                camFile = f
+                camera.launch(vm.files.uriFor(f.path))
+            }
+            IconBtn(R.drawable.ic_cal, "کار زمان‌دار", modifier = Modifier.weight(1f), onClick = onTask)
+            Box(Modifier.weight(1f)) {
+                IconBtn(R.drawable.ic_plus, "بیشتر", modifier = Modifier.fillMaxWidth()) { more = true }
+                DropdownMenu(more, { more = false }) {
+                    DropdownMenuItem({ Text("فایل") }, { more = false; docs.launch(arrayOf("*/*")) })
+                    DropdownMenuItem({ Text("عکس از گالری") }, {
+                        more = false
+                        gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    })
+                    DropdownMenuItem({ Text("موقعیت من") }, {
+                        more = false
+                        if (has(Manifest.permission.ACCESS_FINE_LOCATION) || has(Manifest.permission.ACCESS_COARSE_LOCATION)) vm.addLocation()
+                        else locPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                    })
+                }
             }
         }
     }
 }
 
 @Composable
-private fun Btn(text: String, modifier: Modifier, onClick: () -> Unit) {
-    Text(
-        text,
-        style = MaterialTheme.typography.labelMedium,
-        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        modifier = modifier.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.board.slate).clickable(onClick = onClick).padding(vertical = 10.dp),
-    )
+private fun IconBtn(icon: Int, desc: String, modifier: Modifier, main: Boolean = false, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(14.dp)
+    Box(
+        modifier.height(48.dp).clip(shape)
+            .background(if (main) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
+            .then(if (main) Modifier else Modifier.border(1.dp, MaterialTheme.board.line, shape))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painterResource(icon), contentDescription = desc,
+            tint = if (main) MaterialTheme.board.accentInk else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.size(22.dp),
+        )
+    }
 }
 
 /** ضبط صدا: شروع خودکار، زمان‌سنج، «ثبت» یا «بیخیال». */
@@ -156,10 +170,11 @@ private fun RecordDialog(vm: StreamViewModel, onDone: () -> Unit) {
             }
         }
     }
-    if (failed) {
-        Toast.makeText(ctx, "ضبط صدا شروع نشد", Toast.LENGTH_SHORT).show()
-        onDone()
-        return
+    LaunchedEffect(failed) {
+        if (failed) {
+            Toast.makeText(ctx, "ضبط صدا شروع نشد", Toast.LENGTH_SHORT).show()
+            onDone()
+        }
     }
     AlertDialog(
         onDismissRequest = onDone,

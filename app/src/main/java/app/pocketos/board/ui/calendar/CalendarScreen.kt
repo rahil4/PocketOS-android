@@ -5,6 +5,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -38,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -53,6 +58,7 @@ import app.pocketos.board.domain.Jalali
 import app.pocketos.board.domain.Tags
 import app.pocketos.board.ui.common.Avatar
 import app.pocketos.board.ui.common.Chip
+import app.pocketos.board.ui.common.CustomerCard
 import app.pocketos.board.ui.common.EmptyNote
 import app.pocketos.board.ui.common.SectionLabel
 import app.pocketos.board.ui.stream.StreamViewModel
@@ -77,9 +83,9 @@ fun CalendarScreen(
     val today = vm.today
     val nav = Nav(onOpenCustomer, onOpenCase) { vm.setTag(it) }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 16.dp)) {
+    Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("تقویم", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+            Text("تقویم", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
             TextButton({
                 vm.searching.value = !searching
                 if (searching) vm.query.value = ""
@@ -109,8 +115,24 @@ fun CalendarScreen(
             return@Column
         }
 
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            CalView.entries.forEach { v -> Chip(v.label, selected = ui.view == v) { vm.setView(v) } }
+        val segShape = RoundedCornerShape(12.dp)
+        Row(
+            Modifier.fillMaxWidth().padding(top = 4.dp).clip(segShape).background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, MaterialTheme.board.line, segShape).padding(3.dp),
+        ) {
+            CalView.entries.forEach { v ->
+                val on = ui.view == v
+                Text(
+                    v.label,
+                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(9.dp))
+                        .background(if (on) MaterialTheme.colorScheme.primary else Color.Transparent)
+                        .clickable { vm.setView(v) }.padding(vertical = 6.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = if (on) FontWeight.Bold else FontWeight.Normal,
+                    color = if (on) MaterialTheme.board.accentInk else MaterialTheme.board.muted,
+                )
+            }
         }
         Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton({ vm.go(-1) }) { Icon(Icons.Filled.KeyboardArrowRight, contentDescription = "قبلی") }
@@ -259,17 +281,30 @@ private fun LazyListScope.groupedDay(entries: List<CalEntry>, today: LocalDate, 
 @Composable
 private fun GroupCard(group: CalGroup, byKey: Map<String, CalEntry>, today: LocalDate, stream: StreamViewModel, nav: Nav, defaultOpen: Boolean) {
     var open by rememberSaveable(group.customerId, group.items.size) { mutableStateOf(defaultOpen) }
-    Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.board.slate).padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Row(Modifier.fillMaxWidth().clickable { open = !open }.padding(4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Avatar(group.name, group.customerId ?: 0, 28.dp)
-            Text(group.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).clickable(enabled = group.customerId != null) { nav.customer(group.customerId!!) })
-            Chip(Digits.fa(group.items.size), selected = group.openCount > 0)
+    CustomerCard {
+        Row(
+            Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 12.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Avatar(group.name, group.customerId ?: 0, 30.dp)
+            Text(
+                group.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1,
+                modifier = Modifier.weight(1f).clickable(enabled = group.customerId != null) { nav.customer(group.customerId!!) },
+            )
+            Text(
+                Digits.fa(group.items.size), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.board.muted,
+                modifier = Modifier.clip(RoundedCornerShape(99.dp)).background(MaterialTheme.board.cu.copy(alpha = 0.14f)).padding(horizontal = 9.dp, vertical = 1.dp),
+            )
             Text(if (open) "▾" else "▸", color = MaterialTheme.board.muted)
         }
-        if (open) group.items.forEach { item -> byKey[item.key]?.let { EntryRow(it, today, stream, nav, withCustomer = false) } }
+        if (open) {
+            Row(Modifier.padding(start = 26.dp, end = 12.dp, bottom = 4.dp).height(IntrinsicSize.Min)) {
+                Box(Modifier.width(2.dp).fillMaxHeight().background(MaterialTheme.board.cuLine))
+                Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                    group.items.forEach { item -> byKey[item.key]?.let { EntryRow(it, today, stream, nav, withCustomer = false) } }
+                }
+            }
+        }
     }
 }
 
@@ -280,13 +315,20 @@ private fun LazyListScope.dayCard(day: LocalDate, entries: List<CalEntry>, today
         item("e${day}") { Text("$title · کاری نیست", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)) }
         return
     }
-    item("h${day}") {
-        Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(title, style = MaterialTheme.typography.labelLarge, color = if (day == today) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-            Text(CalendarLogic.summary(entries.map { it.item }), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
+    item("d${day}") {
+        val shape = RoundedCornerShape(14.dp)
+        Column(
+            Modifier.fillMaxWidth().clip(shape).background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, if (day == today) MaterialTheme.colorScheme.primary else MaterialTheme.board.line, shape)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+        ) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(CalendarLogic.summary(entries.map { it.item }), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
+            }
+            entries.forEach { EntryRow(it, today, stream, nav) }
         }
     }
-    items(entries, key = { "${day}${it.item.key}" }) { EntryRow(it, today, stream, nav) }
 }
 
 /** «مانده از قبل» (فقط وقتی بازه امروز را دارد): جمع‌شده. */
@@ -317,8 +359,7 @@ private fun EntryRow(
     val task = entry.task
     if (task == null) {
         Column(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surface)
-                .clickable { item.caseId?.let(nav.case) }.padding(horizontal = 12.dp, vertical = 10.dp),
+            Modifier.fillMaxWidth().clickable { item.caseId?.let(nav.case) }.padding(horizontal = 4.dp, vertical = 10.dp),
         ) {
             Text(item.title, style = MaterialTheme.typography.bodyMedium)
             Text(

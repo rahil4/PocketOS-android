@@ -35,12 +35,12 @@ fun TrashScreen(onBack: () -> Unit, vm: TrashViewModel = hiltViewModel()) {
     val cases = st.cases.filter { it.customerId !in deletedIds }
 
     LazyColumn(
-        Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 16.dp),
+        Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 12.dp, bottom = 24.dp),
     ) {
         item { TextButton(onBack) { Text("‹ بازگشت") } }
-        item { Text("سطل بازیافت", style = MaterialTheme.typography.headlineMedium) }
+        item { Text("سطل بازیافت", style = MaterialTheme.typography.titleLarge) }
         item { Text("هر چیز ۳۰ روز اینجا می‌ماند و بعد پاک می‌شود.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted) }
         if (st.loaded && st.customers.isEmpty() && cases.isEmpty()) item { EmptyNote("سطل خالی است.") }
         if (st.customers.isNotEmpty()) item { SectionLabel("مشتری‌ها") }
