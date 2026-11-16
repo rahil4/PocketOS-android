@@ -59,6 +59,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenTrash: () -> Unit, vm: SettingsView
     val createData = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { vm.createData(it) }
     val createFiles = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { vm.createFiles(it) }
     val openBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { vm.inspect(it) }
+    val pickWebFiles = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { vm.pickWebFiles(it) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refreshBackup() }
 
     b.busy?.let { msg ->
@@ -67,6 +68,13 @@ fun SettingsScreen(onBack: () -> Unit, onOpenTrash: () -> Unit, vm: SettingsView
             title = { Text(msg) },
             text = { CircularProgressIndicator() },
             confirmButton = {},
+        )
+    }
+    b.web?.let { w ->
+        WebImportDialog(
+            w, b.webFiles,
+            onPickFiles = { pickWebFiles.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
+            onConfirm = { vm.confirmWebImport() }, onDismiss = { vm.dismissPreview() },
         )
     }
     b.preview?.let { p -> RestoreDialog(p, onConfirm = { vm.confirmRestore() }, onDismiss = { vm.dismissPreview() }) }
@@ -153,7 +161,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenTrash: () -> Unit, vm: SettingsView
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted,
                     )
                     CheckRow("هر جمعه صبح، اعلان «یک نسخه‌ی پشتیبان بگیر» (اگر ۷ روز نگرفته باشید)", s.backupRemind) { c -> vm.update { it.copy(backupRemind = c) } }
-                    Pill("بازیابی از پشتیبان…") { openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }
+                    Pill("بازیابی از پشتیبان (خود اپ یا وب‌اپ)…") { openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }
                 }
             }
         }
@@ -244,5 +252,40 @@ private fun RestoreDialog(p: app.pocketos.board.data.repo.RestorePreview, onConf
         },
         confirmButton = { if (!invalid) TextButton(onConfirm) { Text(if (p.kind == app.pocketos.board.data.repo.RestoreKind.DATA) "جایگزین کن" else "بازیابی کن") } },
         dismissButton = { TextButton(onDismiss) { Text(if (invalid) "باشه" else "بیخیال") } },
+    )
+}
+
+/** پشتیبان وب‌اپ: خلاصهٔ تبدیل، انتخاب اختیاری ZIP فایل‌ها، و تأیید جایگزینی. */
+@Composable
+private fun WebImportDialog(w: app.pocketos.board.data.repo.WebPreview, filesInfo: String?, onPickFiles: () -> Unit, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val bad = w.error != null
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (bad) "وارد کردن ممکن نیست" else "پشتیبان وب‌اپ دفتر") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (bad) Text(w.error ?: "")
+                else {
+                    Text(Digits.fa("${w.customers} مشتری · ${w.cases} پرونده · ${w.tasks} کار · ${w.notes} یادداشت"))
+                    if (w.orphanCases > 0) {
+                        Text(Digits.fa("${w.orphanCases} پرونده در وب‌اپ مشتری نداشت؛ زیر مشتریِ «پرونده‌های بدون مشتری» می‌آید."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
+                    }
+                    if (w.users > 1) {
+                        Text(Digits.fa("پشتیبان ${w.users} کاربر دارد؛ داده‌ی همه یک‌جا وارد می‌شود و تنظیمات از کاربر اول است."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
+                    }
+                    if (w.files > 0) {
+                        Text(Digits.fa("${w.files} عکس، صدا و فایل در داده‌ها ثبت شده. برای آوردنشان، ZIP «فایل‌ها» (board-files-…) را هم انتخاب کنید:"), style = MaterialTheme.typography.bodySmall)
+                        Pill(if (filesInfo == null) "انتخاب ZIP فایل‌ها…" else "عوض کردن ZIP فایل‌ها…", onClick = onPickFiles)
+                        filesInfo?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary) }
+                    }
+                    Text(
+                        "داده‌های فعلی این گوشی با این پشتیبان جایگزین می‌شود و برنامه دوباره باز می‌شود. یک نسخهٔ پیش از آن در حافظهٔ خود اپ نگه داشته می‌شود.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.amber,
+                    )
+                }
+            }
+        },
+        confirmButton = { if (!bad) TextButton(onConfirm) { Text("جایگزین کن") } },
+        dismissButton = { TextButton(onDismiss) { Text(if (bad) "باشه" else "بیخیال") } },
     )
 }

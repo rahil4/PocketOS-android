@@ -10,6 +10,8 @@ import app.pocketos.board.data.repo.ReminderService
 import app.pocketos.board.data.repo.RestoreKind
 import app.pocketos.board.data.repo.RestorePreview
 import app.pocketos.board.data.repo.SettingsRepository
+import app.pocketos.board.data.repo.WebBackupImporter
+import app.pocketos.board.data.repo.WebPreview
 import app.pocketos.board.domain.AppSettings
 import app.pocketos.board.domain.BackupFormat
 import app.pocketos.board.domain.BackupStatus
@@ -35,6 +37,10 @@ data class BackupUi(
     /** پیام «در حال …» وقتی کاری در جریان است. */
     val busy: String? = null,
     val preview: RestorePreview? = null,
+    /** پشتیبان وب‌اپ که تبدیل شده و منتظر تأیید است. */
+    val web: WebPreview? = null,
+    /** «۱۸ از ۲۰ فایل پیدا شد» پس از انتخاب ZIP فایل‌های وب‌اپ. */
+    val webFiles: String? = null,
     val version: String = "",
 )
 
@@ -44,6 +50,7 @@ class SettingsViewModel @Inject constructor(
     private val repo: SettingsRepository,
     private val reminders: ReminderService,
     private val backup: BackupService,
+    private val web: WebBackupImporter,
     private val prefs: PrefRepository,
     private val ui: UiMessenger,
     private val clock: Clock,
@@ -54,6 +61,7 @@ class SettingsViewModel @Inject constructor(
     val backupState: StateFlow<BackupUi> = _backup
 
     private var restoreUri: Uri? = null
+    private var webFilesUri: Uri? = null
 
     init { refreshBackup() }
 
@@ -127,15 +135,43 @@ class SettingsViewModel @Inject constructor(
     fun inspect(uri: Uri?) {
         uri ?: return
         restoreUri = uri
+        webFilesUri = null
         run("در حال خواندن پشتیبان…") {
-            val p = backup.inspect { requireNotNull(context.contentResolver.openInputStream(uri)) { "فایل باز نشد" } }
-            _backup.value = _backup.value.copy(preview = p)
+            val open = { requireNotNull(context.contentResolver.openInputStream(uri)) { "فایل باز نشد" } }
+            // ZIP پشتیبان وب‌اپ؟ ← تبدیل به ساختار اپ؛ وگرنه پشتیبان خود اپ.
+            val w = web.prepare(open)
+            if (w != null) _backup.value = _backup.value.copy(web = w, webFiles = null, preview = null)
+            else _backup.value = _backup.value.copy(preview = backup.inspect(open), web = null)
         }
     }
 
     fun dismissPreview() {
-        _backup.value = _backup.value.copy(preview = null)
+        _backup.value = _backup.value.copy(preview = null, web = null, webFiles = null)
         restoreUri = null
+        webFilesUri = null
+    }
+
+    /** ZIP «فایل‌ها»ی وب‌اپ (اختیاری): فقط می‌شمارد که چند فایلِ ارجاع‌شده در آن هست. */
+    fun pickWebFiles(uri: Uri?) {
+        uri ?: return
+        run("در حال خواندن فایل‌ها…") {
+            val (found, wanted) = web.countFiles { requireNotNull(context.contentResolver.openInputStream(uri)) { "فایل باز نشد" } }
+            webFilesUri = uri
+            _backup.value = _backup.value.copy(webFiles = Digits.fa("$found از $wanted فایل در این ZIP پیدا شد"))
+        }
+    }
+
+    /** جایگزینی با دادهٔ تبدیل‌شدهٔ وب‌اپ (و فایل‌ها اگر انتخاب شده)؛ سپس برنامه دوباره باز می‌شود. */
+    fun confirmWebImport() {
+        val w = _backup.value.web ?: return
+        if (w.error != null) { dismissPreview(); return }
+        val filesUri = webFilesUri
+        run("در حال وارد کردن…") {
+            if (filesUri != null) {
+                web.importFiles { requireNotNull(context.contentResolver.openInputStream(filesUri)) { "فایل باز نشد" } }
+            }
+            if (backup.commitRestore()) AppRestarter.restart(context) else ui.show("وارد کردن آماده نشد؛ دوباره امتحان کنید.")
+        }
     }
 
     fun confirmRestore() {
