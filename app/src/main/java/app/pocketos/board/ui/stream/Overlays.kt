@@ -11,9 +11,8 @@ import app.pocketos.board.data.db.ItemEntity
 /** وضعیت پنجره‌های روی صفحه: یادداشت، «ثبت در»، نمایشگر عکس، «پرونده هم نهایی شود؟». */
 class OverlayState {
     var note by mutableStateOf(false)
-    var taskMode by mutableStateOf(false)
 
-    fun openNote(task: Boolean = false) { taskMode = task; note = true }
+    fun openNote() { note = true }
     var picker by mutableStateOf(false)
     var viewer by mutableStateOf<ItemEntity?>(null)
     var finishCase by mutableStateOf<Long?>(null)
@@ -25,7 +24,7 @@ fun rememberOverlayState(): OverlayState = remember { OverlayState() }
 @Composable
 fun StreamOverlays(vm: StreamViewModel, o: OverlayState) {
     LaunchedEffect(vm) { vm.finishAsk.collect { o.finishCase = it } }
-    if (o.note) NoteDialog(vm, o.taskMode) { o.note = false }
+    if (o.note) NoteDialog(vm) { o.note = false }
     if (o.picker) TargetPickerDialog(vm, "ثبت در…", { o.picker = false }) { vm.pickTarget(it); o.picker = false }
     o.viewer?.let { PhotoViewer(it, vm) { o.viewer = null } }
     o.finishCase?.let { id ->

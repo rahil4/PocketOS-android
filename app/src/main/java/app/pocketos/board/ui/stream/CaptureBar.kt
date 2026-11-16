@@ -51,11 +51,12 @@ import app.pocketos.board.ui.theme.board
 import kotlinx.coroutines.delay
 
 /**
- * دک ثبت مثل وب‌اپ: «ثبت در: …» و پنج دکمهٔ آیکونی (یادداشت، صدا، عکس، کار زمان‌دار، بیشتر).
+ * دک ثبت: «ثبت در: …» و چهار دکمهٔ آیکونی (یادداشت، صدا، عکس، بیشتر). کار زمان‌دار هم از «یادداشت» ثبت می‌شود
+ * (روز و تکرار از متن تشخیص داده می‌شود).
  * «بیشتر»: فایل، عکس از گالری، موقعیت من.
  */
 @Composable
-fun CaptureBar(vm: StreamViewModel, onPickTarget: () -> Unit, onNote: () -> Unit, onTask: () -> Unit) {
+fun CaptureBar(vm: StreamViewModel, onPickTarget: () -> Unit, onNote: () -> Unit) {
     val ctx = LocalContext.current
     val label by vm.targetLabel.collectAsStateWithLifecycle()
     var recording by remember { mutableStateOf(false) }
@@ -99,7 +100,6 @@ fun CaptureBar(vm: StreamViewModel, onPickTarget: () -> Unit, onNote: () -> Unit
                 camFile = f
                 camera.launch(vm.files.uriFor(f.path))
             }
-            IconBtn(R.drawable.ic_cal, "کار زمان‌دار", modifier = Modifier.weight(1f), onClick = onTask)
             Box(Modifier.weight(1f)) {
                 IconBtn(R.drawable.ic_plus, "بیشتر", modifier = Modifier.fillMaxWidth()) { more = true }
                 DropdownMenu(more, { more = false }) {

@@ -164,7 +164,7 @@ fun CustomerScreen(
             }
             historySection(ss, stream, nowMillis, onOpenTag) { overlays.viewer = it }
         }
-        CaptureBar(stream, onPickTarget = { overlays.picker = true }, onNote = { overlays.openNote(false) }, onTask = { overlays.openNote(true) })
+        CaptureBar(stream, onPickTarget = { overlays.picker = true }, onNote = { overlays.openNote() })
     }
 }
 

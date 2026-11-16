@@ -46,7 +46,7 @@ private val TAG_AT_END = Regex("#([\\p{L}\\p{N}_]*)$")
 
 /** یادداشت جدید: روز و تکرار از متن تشخیص داده می‌شود؛ هیچ فیلد اجباری نیست. */
 @Composable
-fun NoteDialog(vm: StreamViewModel, taskMode: Boolean, onDismiss: () -> Unit) {
+fun NoteDialog(vm: StreamViewModel, onDismiss: () -> Unit) {
     var text by rememberSaveable { mutableStateOf("") }
     val label by vm.targetLabel.collectAsStateWithLifecycle()
     val allTags by produceState(emptyList<String>()) { value = vm.tagSuggestions() }
@@ -56,22 +56,16 @@ fun NoteDialog(vm: StreamViewModel, taskMode: Boolean, onDismiss: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text((if (taskMode) "کار زمان‌دار · " else "یادداشت · ") + label) },
+        title = { Text("یادداشت · $label") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     text, { text = it },
-                    placeholder = { Text(if (taskMode) "مثلاً: فردا تحویل نقشه، یا هر هفته تماس" else "بنویس… («فردا تحویل نقشه» کار می‌شود)") },
+                    placeholder = { Text("بنویس… («فردا تحویل نقشه» کار می‌شود)") },
                     minLines = 3, modifier = Modifier.fillMaxWidth(),
                 )
                 if (suggestions.isNotEmpty()) {
                     TagRow(suggestions) { tag -> text = text.replace(TAG_AT_END, "#$tag ") }
-                }
-                if (taskMode && cap == null && text.isNotBlank()) {
-                    Text(
-                        "روز را هم بنویسید: فردا، سه‌شنبه، ۲۸ مهر، +۳ … یا تکرار: هر هفته، هر دوشنبه، هر ماه، هر ۳ روز",
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted,
-                    )
                 }
                 if (cap != null) {
                     Text(
@@ -82,7 +76,7 @@ fun NoteDialog(vm: StreamViewModel, taskMode: Boolean, onDismiss: () -> Unit) {
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (cap != null) Pill("ثبت کار برای ${DayLabel.of(cap.due, vm.today)}", primary = true) { vm.saveTaskFromText(text); onDismiss() }
-                    if (!taskMode) Pill("ثبت یادداشت", primary = cap == null) { vm.saveNote(text); onDismiss() }
+                    Pill("ثبت یادداشت", primary = cap == null) { vm.saveNote(text); onDismiss() }
                 }
             }
         },

@@ -48,6 +48,6 @@ fun InboxScreen(onBack: () -> Unit, onOpenTag: (String) -> Unit, vm: StreamViewM
             if (st.loaded && st.items.isEmpty()) item { EmptyNote("صندوق ورودی خالی است.") }
             items(st.items, key = { it.id }) { ItemCard(it, vm, now, onOpenTag) { overlays.viewer = it } }
         }
-        CaptureBar(vm, onPickTarget = { overlays.picker = true }, onNote = { overlays.openNote(false) }, onTask = { overlays.openNote(true) })
+        CaptureBar(vm, onPickTarget = { overlays.picker = true }, onNote = { overlays.openNote() })
     }
 }

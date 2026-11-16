@@ -68,7 +68,7 @@ fun HomeScreen(
     val quick by vm.quickNote.collectAsStateWithLifecycle()
     LaunchedEffect(quick) {
         if (quick) {
-            overlays.openNote(false)
+            overlays.openNote()
             vm.consumeQuickNote()
         }
     }
@@ -141,7 +141,7 @@ fun HomeScreen(
         }
         CaptureBar(
             stream, onPickTarget = { overlays.picker = true },
-            onNote = { overlays.openNote(false) }, onTask = { overlays.openNote(true) },
+            onNote = { overlays.openNote() },
         )
     }
 }
