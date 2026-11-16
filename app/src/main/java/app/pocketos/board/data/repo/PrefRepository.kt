@@ -40,6 +40,10 @@ class PrefRepository @Inject constructor(db: BoardDatabase) {
         const val LAST_MORNING = "last_morning"
         const val LAST_EVENING = "last_evening"
 
+        const val BACKUP_REMIND = "backup_remind"
+        const val LAST_BACKUP = "last_backup_dl"
+        const val LAST_BACKUP_REMIND = "last_backup_remind"
+
         /** آخرین نمای تقویم. */
         const val CAL_VIEW = "cal_view"
     }

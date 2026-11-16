@@ -32,6 +32,7 @@ class SettingsRepository @Inject constructor(private val prefs: PrefRepository) 
             morningHour = prefs.getString(PrefRepository.MORNING_HOUR)?.toIntOrNull()?.takeIf { it in 0..23 } ?: d.morningHour,
             eveningPush = bool(PrefRepository.EVENING_PUSH, d.eveningPush),
             pushNames = bool(PrefRepository.PUSH_NAMES, d.pushNames),
+            backupRemind = bool(PrefRepository.BACKUP_REMIND, d.backupRemind),
         )
     }
 
@@ -44,6 +45,7 @@ class SettingsRepository @Inject constructor(private val prefs: PrefRepository) 
         prefs.setString(PrefRepository.MORNING_HOUR, n.morningHour.toString())
         prefs.setBool(PrefRepository.EVENING_PUSH, n.eveningPush)
         prefs.setBool(PrefRepository.PUSH_NAMES, n.pushNames)
+        prefs.setBool(PrefRepository.BACKUP_REMIND, n.backupRemind)
         _state.value = n
     }
 }

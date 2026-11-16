@@ -1,6 +1,7 @@
 package app.pocketos.board.data.repo
 
 import app.pocketos.board.data.db.BoardDatabase
+import app.pocketos.board.domain.BackupStatus
 import app.pocketos.board.domain.Payload
 import app.pocketos.board.domain.ReminderTask
 import app.pocketos.board.domain.Reminders
@@ -54,6 +55,12 @@ class ReminderService @Inject constructor(
             val n = rowsUpTo(today).size
             if (n > 0) Reminders.evening(n).let { sink.show(it); sent += it }
             prefs.setString(PrefRepository.LAST_EVENING, today.toString())
+        }
+        // جمعه صبح: «یک نسخهٔ پشتیبان بگیر» (اگر ۷ روز نگرفته باشید)
+        val ago = BackupStatus.daysSince(prefs.getString(PrefRepository.LAST_BACKUP), today)
+        if (Reminders.backupDue(s.backupRemind, today, now.hour, s.morningHour, prefs.getString(PrefRepository.LAST_BACKUP_REMIND), ago)) {
+            Reminders.backup(ago).let { sink.show(it); sent += it }
+            prefs.setString(PrefRepository.LAST_BACKUP_REMIND, today.toString())
         }
         return sent
     }

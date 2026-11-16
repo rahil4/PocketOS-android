@@ -3,6 +3,9 @@ package app.pocketos.board.data.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 
+/** نسخهٔ ساختار پایگاه‌داده؛ پشتیبان‌گیری و بازیابی هم آن را می‌سنجند. */
+const val DB_VERSION = 1
+
 @Database(
     entities = [
         CustomerEntity::class,
@@ -12,7 +15,7 @@ import androidx.room.RoomDatabase
         SimilarNoEntity::class,
         PrefEntity::class,
     ],
-    version = 1,
+    version = DB_VERSION,
     exportSchema = true,
 )
 abstract class BoardDatabase : RoomDatabase() {

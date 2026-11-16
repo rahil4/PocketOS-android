@@ -14,6 +14,8 @@ data class AppSettings(
     val morningHour: Int = 8,
     val eveningPush: Boolean = false,
     val pushNames: Boolean = true,
+    /** هر جمعه صبح، «یک نسخهٔ پشتیبان بگیر» اگر ۷ روز نگرفته باشید. */
+    val backupRemind: Boolean = true,
 ) {
     /** ضریب «زوم» کل رابط. */
     val scale: Float
@@ -66,6 +68,18 @@ object Reminders {
         }
         return Payload(Digits.fa(title), Digits.fa(body), "home", "morning")
     }
+
+    /** جمعه صبح (همان پنجرهٔ اعلان صبحگاهی) و فقط اگر آخرین پشتیبان ۷ روز یا بیشتر پیش بود. */
+    fun backupDue(
+        on: Boolean, today: LocalDate, hourNow: Int, morningHour: Int, lastRemind: String?, daysSinceBackup: Int?,
+    ): Boolean = on && today.dayOfWeek == java.time.DayOfWeek.FRIDAY && lastRemind != today.toString() &&
+        hourNow in morningHour..(morningHour + MORNING_WINDOW) && (daysSinceBackup == null || daysSinceBackup >= 7)
+
+    fun backup(daysSinceBackup: Int?): Payload = Payload(
+        "یک نسخه‌ی پشتیبان بگیر",
+        if (daysSinceBackup == null) "هنوز نسخه‌ای نگرفته‌اید" else Digits.fa("آخرین نسخه $daysSinceBackup روز پیش بود"),
+        "settings", "backup",
+    )
 
     fun evening(openCount: Int): Payload =
         Payload("روز را ببند و سبک شو", Digits.fa("$openCount کار هنوز باز است؛ یک لمس برای تصمیم."), "evening", "evening")

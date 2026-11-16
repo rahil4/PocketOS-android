@@ -16,7 +16,7 @@ android {
         targetSdk = 35
         // شمارندهٔ اجرای CI؛ هر نسخهٔ تازه عدد بزرگ‌تری دارد تا اندروید آن را «به‌روزرسانی» بداند.
         versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
-        versionName = "0.4.${System.getenv("GITHUB_RUN_NUMBER") ?: "0"}"
+        versionName = "1.0"
     }
 
     // امضای ثابت: بدون آن هر اجرای CI کلید debug تصادفی می‌سازد و نصب روی نسخهٔ قبلی با «App not installed» رد می‌شود.

@@ -21,7 +21,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -51,7 +54,22 @@ import app.pocketos.board.ui.theme.board
 @Composable
 fun SettingsScreen(onBack: () -> Unit, onOpenTrash: () -> Unit, vm: SettingsViewModel = hiltViewModel()) {
     val s by vm.state.collectAsStateWithLifecycle()
+    val b by vm.backupState.collectAsStateWithLifecycle()
     val ctx = LocalContext.current
+    val createData = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { vm.createData(it) }
+    val createFiles = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { vm.createFiles(it) }
+    val openBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { vm.inspect(it) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refreshBackup() }
+
+    b.busy?.let { msg ->
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(msg) },
+            text = { CircularProgressIndicator() },
+            confirmButton = {},
+        )
+    }
+    b.preview?.let { p -> RestoreDialog(p, onConfirm = { vm.confirmRestore() }, onDismiss = { vm.dismissPreview() }) }
     var notifOn by remember { mutableStateOf(NotificationManagerCompat.from(ctx).areNotificationsEnabled()) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { notifOn = NotificationManagerCompat.from(ctx).areNotificationsEnabled() }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -119,6 +137,41 @@ fun SettingsScreen(onBack: () -> Unit, onOpenTrash: () -> Unit, vm: SettingsView
                 }
             }
         }
+        item("backup") {
+            SurfaceCard {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("پشتیبان", style = MaterialTheme.typography.titleMedium)
+                    Text(b.status, style = MaterialTheme.typography.bodyMedium, color = if (b.status.startsWith("✓")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        "پشتیبان داخل اپ نمی‌ماند؛ هر جا انتخاب کنید ذخیره می‌شود (گوشی، Google Drive، …). فایل را جایی امن نگه دارید.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted,
+                    )
+                    Pill(Digits.fa("پشتیبان داده‌ها (ZIP · حدود ${b.dataMb} مگابایت)"), primary = true) { createData.launch(vm.dataFileName()) }
+                    Pill(Digits.fa("پشتیبان عکس‌ها و فایل‌ها (ZIP · حدود ${b.filesMb} مگابایت)")) { createFiles.launch(vm.filesFileName()) }
+                    Text(
+                        "پشتیبانِ عکس‌ها بدون «داده‌ها» به کار نمی‌آید؛ هر دو را با هم نگه دارید. «داده‌ها» کوچک است؛ هفته‌ای یک‌بار کافی است، و «عکس‌ها و فایل‌ها» هر چند وقت یک‌بار.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted,
+                    )
+                    CheckRow("هر جمعه صبح، اعلان «یک نسخه‌ی پشتیبان بگیر» (اگر ۷ روز نگرفته باشید)", s.backupRemind) { c -> vm.update { it.copy(backupRemind = c) } }
+                    Pill("بازیابی از پشتیبان…") { openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }
+                }
+            }
+        }
+        item("about") {
+            SurfaceCard {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("دربارهٔ دفتر", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        Digits.fa("نسخهٔ ${b.version} · بدون اینترنت، بدون سرور و بدون هوش مصنوعی. دادهٔ شما فقط روی همین گوشی است."),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted,
+                    )
+                    Text(
+                        "داده روی حافظه رمزگذاری نشده؛ قفل گوشی را فعال نگه دارید.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted,
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -158,4 +211,38 @@ private fun SelectField(label: String, options: List<Pair<String, String>>, sele
             }
         }
     }
+}
+
+/** خلاصهٔ ZIP پیش از بازیابی؛ جایگزینی فقط با تأیید. */
+@Composable
+private fun RestoreDialog(p: app.pocketos.board.data.repo.RestorePreview, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val invalid = p.kind == app.pocketos.board.data.repo.RestoreKind.INVALID
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (invalid) "بازیابی ممکن نیست" else "بازیابی از پشتیبان؟") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                when (p.kind) {
+                    app.pocketos.board.data.repo.RestoreKind.INVALID -> Text(p.error ?: "فایل معتبر نیست.")
+                    app.pocketos.board.data.repo.RestoreKind.DATA -> {
+                        p.createdAt?.let { Text(Digits.fa(app.pocketos.board.domain.Jalali.formatLong(java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate())), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted) }
+                        Text(Digits.fa("${p.customers} مشتری · ${p.cases} پرونده · ${p.tasks} کار · ${p.notes} یادداشت"))
+                        Text(
+                            "داده‌های فعلی این گوشی با این نسخه جایگزین می‌شود و برنامه دوباره باز می‌شود. یک نسخهٔ پیش از بازیابی در حافظهٔ خود اپ نگه داشته می‌شود.",
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.amber,
+                        )
+                    }
+                    app.pocketos.board.data.repo.RestoreKind.FILES -> {
+                        Text(Digits.fa("${p.files} عکس، صدا و فایل"))
+                        Text(
+                            "فایل‌ها به حافظهٔ اپ اضافه می‌شود (اگر پیش‌تر هست، رونویسی). این پشتیبان فقط با «داده‌ها» معنی دارد.",
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = { if (!invalid) TextButton(onConfirm) { Text(if (p.kind == app.pocketos.board.data.repo.RestoreKind.DATA) "جایگزین کن" else "بازیابی کن") } },
+        dismissButton = { TextButton(onDismiss) { Text(if (invalid) "باشه" else "بیخیال") } },
+    )
 }

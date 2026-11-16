@@ -17,7 +17,10 @@ object AppModule {
     @Provides
     @Singleton
     fun database(@ApplicationContext context: Context): BoardDatabase =
-        Room.databaseBuilder(context, BoardDatabase::class.java, BoardDatabase.NAME).build()
+        // اگر بازیابی از پشتیبان منتظر است، پیش از باز شدن پایگاه‌داده جایگزین می‌شود.
+        Room.databaseBuilder(context, BoardDatabase::class.java, BoardDatabase.NAME)
+            .also { app.pocketos.board.data.RestoreApplier.applyIfPending(context) }
+            .build()
 
     @Provides
     @Singleton
