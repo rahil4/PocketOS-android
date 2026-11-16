@@ -34,6 +34,8 @@ class CustomerRepository @Inject constructor(private val db: BoardDatabase, priv
 
     fun observe(id: Long): Flow<CustomerEntity?> = customers.observe(id)
 
+    suspend fun get(id: Long): CustomerEntity? = customers.get(id)
+
     /** مشتری‌های فعال برای انتخاب‌گرها (ادغام، انتقال). */
     fun observeActive(): Flow<List<CustomerEntity>> = customers.observeActive()
 

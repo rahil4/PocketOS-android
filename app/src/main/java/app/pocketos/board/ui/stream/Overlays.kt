@@ -26,7 +26,7 @@ fun rememberOverlayState(): OverlayState = remember { OverlayState() }
 fun StreamOverlays(vm: StreamViewModel, o: OverlayState) {
     LaunchedEffect(vm) { vm.finishAsk.collect { o.finishCase = it } }
     if (o.note) NoteDialog(vm, o.taskMode) { o.note = false }
-    if (o.picker) TargetPickerDialog(vm, "ثبت در…", { o.picker = false }) { vm.target.value = it; o.picker = false }
+    if (o.picker) TargetPickerDialog(vm, "ثبت در…", { o.picker = false }) { vm.pickTarget(it); o.picker = false }
     o.viewer?.let { PhotoViewer(it, vm) { o.viewer = null } }
     o.finishCase?.let { id ->
         FinishCaseDialog(

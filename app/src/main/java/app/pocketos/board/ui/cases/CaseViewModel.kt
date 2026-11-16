@@ -50,6 +50,11 @@ class CaseViewModel @Inject constructor(
 
     val others = customers.observeActive().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** باز شدن واقعیِ پروندهٔ «جدید» آن را «در حال انجام» می‌کند. */
+    fun markOpened() {
+        viewModelScope.launch { repo.markOpened(id) }
+    }
+
     fun setStatus(s: CaseStatus) {
         viewModelScope.launch { repo.setStatus(id, s) }
     }

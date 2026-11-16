@@ -40,11 +40,18 @@ data class CalUi(
     val tag: String? = null,
 )
 
+/** درخواست رفتن به یک روز (مثلاً «فردا: N کار ←» از خانه). */
+@javax.inject.Singleton
+class CalendarTarget @Inject constructor() {
+    val request = MutableStateFlow<LocalDate?>(null)
+}
+
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
     private val repo: CalendarRepository,
     private val prefs: PrefRepository,
+    private val calendarTarget: CalendarTarget,
     private val clock: Clock,
 ) : ViewModel() {
     val today: LocalDate get() = LocalDate.now(clock)
@@ -57,6 +64,14 @@ class CalendarViewModel @Inject constructor(
 
     init {
         viewModelScope.launch { view.value = CalView.of(prefs.getString(PrefRepository.CAL_VIEW)) }
+        viewModelScope.launch {
+            calendarTarget.request.collect { d ->
+                if (d != null) {
+                    openDay(d)
+                    calendarTarget.request.value = null
+                }
+            }
+        }
     }
 
     val ui: StateFlow<CalUi> = combine(view, anchor, tag) { v, a, t -> Triple(v, a, t) }

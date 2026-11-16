@@ -45,6 +45,9 @@ sealed interface StreamScope {
     data class Customer(val id: Long) : StreamScope
     data class Case(val id: Long) : StreamScope
     data object Inbox : StreamScope
+
+    /** خانه: مقصد ثبت = «پروندهٔ فعال» که در گوشی می‌ماند. */
+    data object Active : StreamScope
 }
 
 data class StreamState(
@@ -93,12 +96,41 @@ class StreamViewModel @Inject constructor(
             is StreamScope.Customer -> Target(s.id, null)
             is StreamScope.Case -> Target(null, s.id)
             StreamScope.Inbox -> Target.Inbox
+            StreamScope.Active -> Target.Inbox
+        }
+        if (s == StreamScope.Active) loadActive()
+    }
+
+    private fun loadActive() {
+        viewModelScope.launch {
+            val kid = prefs.getString(PrefRepository.ACTIVE_CASE)?.toLongOrNull()
+            val cid = prefs.getString(PrefRepository.ACTIVE_CUSTOMER)?.toLongOrNull()
+            val case = kid?.let { caseRepo.get(it) }?.takeIf { it.deletedAt == null }
+            val customer = cid?.let { customerRepo.get(it) }?.takeIf { it.deletedAt == null }
+            // پروندهٔ فعال حذف شده بود ← صندوق ورودی
+            target.value = when {
+                case != null -> Target(null, case.id)
+                customer != null -> Target(customer.id, null)
+                else -> Target.Inbox
+            }
+        }
+    }
+
+    /** مقصد را عوض می‌کند؛ در خانه در گوشی هم می‌ماند. */
+    fun pickTarget(t: Target) {
+        target.value = t
+        if (scope.value == StreamScope.Active) {
+            viewModelScope.launch {
+                prefs.setString(PrefRepository.ACTIVE_CASE, t.caseId?.toString() ?: "")
+                prefs.setString(PrefRepository.ACTIVE_CUSTOMER, t.customerId?.toString() ?: "")
+            }
         }
     }
 
     val state: StateFlow<StreamState> = scope.filterNotNull().flatMapLatest { s ->
         when (s) {
             StreamScope.Inbox -> itemRepo.observeInbox().map { StreamState(items = it, loaded = true) }
+            StreamScope.Active -> flowOf(StreamState(loaded = true))
             else -> {
                 val customerId = (s as? StreamScope.Customer)?.id
                 val caseId = (s as? StreamScope.Case)?.id

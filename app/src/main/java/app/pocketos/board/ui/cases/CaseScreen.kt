@@ -64,6 +64,13 @@ fun CaseScreen(
     LaunchedEffect(st.loaded, st.case == null) { if (st.loaded && st.case == null) onBack() }
     val k = st.case ?: return
     LaunchedEffect(k.id) { stream.bind(StreamScope.Case(k.id)) }
+    // مثل وب‌اپ: بعد از ۱٫۵ ثانیه ماندن روی پروندهٔ «جدید»، «در حال انجام» می‌شود.
+    LaunchedEffect(k.id, k.status) {
+        if (k.status == CaseStatus.NEW.code) {
+            kotlinx.coroutines.delay(1500)
+            vm.markOpened()
+        }
+    }
     val due = k.dueDay?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
     val late = due != null && !due.isAfter(vm.today) && CaseStatus.of(k.status).open
 

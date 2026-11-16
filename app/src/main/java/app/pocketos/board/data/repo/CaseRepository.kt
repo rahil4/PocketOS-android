@@ -83,4 +83,27 @@ class CaseRepository @Inject constructor(private val db: BoardDatabase, private 
         if (owner?.deletedAt != null) customers.setDeleted(owner.id, null)
         customers.touch(c.customerId, clock.millis())
     }
+
+    /** «✓ تمام شد» در «نیاز به توجه»: پرونده «نهایی» می‌شود. وضعیت قبلی را برای «بازگردانی» برمی‌گرداند. */
+    suspend fun markFinal(id: Long): CaseStatus? = db.withTransaction {
+        val c = cases.get(id) ?: return@withTransaction null
+        val prev = CaseStatus.of(c.status)
+        cases.update(c.copy(status = CaseStatus.FINAL.code, lastActivity = clock.millis()))
+        prev
+    }
+
+    /** «دیدم، بماند»: «جدید» ← «در حال انجام»؛ در هر حال فعالیت به الان می‌رسد. */
+    suspend fun markSeen(id: Long) = db.withTransaction {
+        val c = cases.get(id) ?: return@withTransaction
+        val status = if (CaseStatus.of(c.status) == CaseStatus.NEW) CaseStatus.DOING.code else c.status
+        cases.update(c.copy(status = status, lastActivity = clock.millis()))
+    }
+
+    /** باز شدن واقعیِ پروندهٔ «جدید» (بعد از چند ثانیه) آن را «در حال انجام» می‌کند. */
+    suspend fun markOpened(id: Long) = db.withTransaction {
+        val c = cases.get(id) ?: return@withTransaction
+        if (c.deletedAt == null && CaseStatus.of(c.status) == CaseStatus.NEW) {
+            cases.update(c.copy(status = CaseStatus.DOING.code, lastActivity = clock.millis()))
+        }
+    }
 }

@@ -43,7 +43,10 @@ import app.pocketos.board.ui.calendar.CalendarScreen
 import app.pocketos.board.ui.cases.CaseScreen
 import app.pocketos.board.ui.customers.CustomerScreen
 import app.pocketos.board.ui.customers.CustomersScreen
+import app.pocketos.board.ui.evening.EveningScreen
+import app.pocketos.board.ui.home.AttentionScreen
 import app.pocketos.board.ui.home.HomeScreen
+import app.pocketos.board.ui.search.SearchScreen
 import app.pocketos.board.ui.inbox.InboxScreen
 import app.pocketos.board.ui.tags.TagScreen
 import app.pocketos.board.ui.trash.TrashScreen
@@ -61,10 +64,13 @@ private const val CUSTOMER = "customer/{id}"
 private const val CASE = "case/{id}"
 private const val TRASH = "trash"
 private const val INBOX = "inbox"
+private const val ATTENTION = "attention"
+private const val EVENING = "evening"
+private const val SEARCH = "search"
 private const val TAG = "tag/{name}"
 
 @HiltViewModel
-class RootViewModel @Inject constructor(val messenger: UiMessenger) : ViewModel()
+class RootViewModel @Inject constructor(val messenger: UiMessenger, val calendarTarget: app.pocketos.board.ui.calendar.CalendarTarget) : ViewModel()
 
 @Composable
 fun BoardRoot(root: RootViewModel = hiltViewModel()) {
@@ -92,7 +98,11 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
                 HorizontalDivider(color = MaterialTheme.board.line)
                 Row(Modifier.fillMaxWidth().navigationBarsPadding()) {
                     Tab.entries.forEach { tab ->
-                        val on = if (tab == Tab.Customers) inCustomers else current == tab.route
+                        val on = when (tab) {
+                            Tab.Customers -> inCustomers
+                            Tab.Home -> current == Tab.Home.route || current == ATTENTION || current == EVENING || current == SEARCH
+                            else -> current == tab.route
+                        }
                         val color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.board.muted
                         Column(
                             Modifier.weight(1f).clickable {
@@ -113,7 +123,35 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
         },
     ) { padding ->
         NavHost(nav, startDestination = Tab.Home.route, modifier = Modifier.padding(padding)) {
-            composable(Tab.Home.route) { HomeScreen() }
+            composable(Tab.Home.route) {
+                HomeScreen(
+                    onOpenCustomer = { nav.navigate("customer/$it") },
+                    onOpenCase = { nav.navigate("case/$it") },
+                    onOpenTag = { nav.navigate("tag/" + Uri.encode(it)) },
+                    onOpenAttention = { nav.navigate(ATTENTION) },
+                    onOpenCalendar = { nav.navigate(Tab.Calendar.route) { launchSingleTop = true } },
+                    onOpenTomorrow = { day ->
+                        root.calendarTarget.request.value = day
+                        nav.navigate(Tab.Calendar.route) { launchSingleTop = true }
+                    },
+                    onOpenInbox = { nav.navigate(INBOX) },
+                    onOpenEvening = { nav.navigate(EVENING) },
+                    onOpenSearch = { nav.navigate(SEARCH) },
+                )
+            }
+            composable(ATTENTION) {
+                AttentionScreen(
+                    onBack = { nav.popBackStack() }, onOpenCustomer = { nav.navigate("customer/$it") },
+                    onOpenCase = { nav.navigate("case/$it") }, onOpenTag = { nav.navigate("tag/" + Uri.encode(it)) },
+                )
+            }
+            composable(EVENING) { EveningScreen(onBack = { nav.popBackStack() }) }
+            composable(SEARCH) {
+                SearchScreen(
+                    onBack = { nav.popBackStack() }, onOpenCustomer = { nav.navigate("customer/$it") },
+                    onOpenCase = { nav.navigate("case/$it") }, onOpenTag = { nav.navigate("tag/" + Uri.encode(it)) },
+                )
+            }
             composable(Tab.Calendar.route) {
                 CalendarScreen(onOpenCustomer = { nav.navigate("customer/$it") }, onOpenCase = { nav.navigate("case/$it") })
             }

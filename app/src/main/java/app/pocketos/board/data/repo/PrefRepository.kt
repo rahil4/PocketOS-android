@@ -22,6 +22,14 @@ class PrefRepository @Inject constructor(db: BoardDatabase) {
         /** «پرونده هم نهایی شود؟» دیگر پرسیده نشود. */
         const val NO_FINISH_ASK = "no_finish_ask"
 
+        /** پروندهٔ/مشتریِ فعال برای ثبت از خانه. */
+        const val ACTIVE_CUSTOMER = "active_customer"
+        const val ACTIVE_CASE = "active_case"
+
+        /** روزی که «روز بسته شد» و ساعت پیشنهاد. */
+        const val CLOSED_ON = "closed_on"
+        const val EVENING_HOUR = "evening_hour"
+
         /** آخرین نمای تقویم. */
         const val CAL_VIEW = "cal_view"
     }
