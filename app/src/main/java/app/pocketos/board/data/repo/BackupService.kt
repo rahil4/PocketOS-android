@@ -67,6 +67,9 @@ class BackupService @Inject constructor(
 ) {
     private val dataEntries = setOf(BackupFormat.DB_ENTRY, BackupFormat.README_ENTRY, BackupFormat.INFO_ENTRY)
 
+    /** فایل‌های اپ فقط با نام uuid ذخیره می‌شوند؛ هر ورودیِ دیگر در ZIP «فایل» حساب نمی‌شود. */
+    private val fileName = Regex("[0-9a-fA-F-]{36}")
+
     private fun zoneDate(millis: Long): LocalDate = Instant.ofEpochMilli(millis).atZone(clock.zone).toLocalDate()
 
     suspend fun markBackedUp() = prefs.setString(PrefRepository.LAST_BACKUP, LocalDate.now(clock).toString())
@@ -222,7 +225,7 @@ class BackupService @Inject constructor(
                         name == BackupFormat.INFO_ENTRY ->
                             created = Regex("\"created\":(\\d+)").find(zin.readBytes().toString(Charsets.UTF_8))?.groupValues?.get(1)?.toLongOrNull()
                         name in dataEntries || name.endsWith(".csv") -> Unit
-                        else -> fileCount++
+                        fileName.matches(File(name).name) -> fileCount++
                     }
                     zin.closeEntry()
                     e = zin.nextEntry
@@ -256,7 +259,7 @@ class BackupService @Inject constructor(
             var e = zin.nextEntry
             while (e != null) {
                 val name = File(e.name).name // فقط نام؛ مسیرِ ../ هرگز
-                if (!e.isDirectory && name.isNotEmpty() && name !in dataEntries && !name.endsWith(".csv")) {
+                if (!e.isDirectory && fileName.matches(name)) {
                     files.file(name).outputStream().use { zin.copyTo(it) }
                     n++
                 }
