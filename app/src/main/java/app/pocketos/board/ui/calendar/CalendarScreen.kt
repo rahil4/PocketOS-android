@@ -329,21 +329,23 @@ private fun EntryRow(
         }
         return
     }
+    val customerName = item.customerName
+    val caseTitle = item.caseTitle
     TaskRow(task, stream, onTag = nav.tag, done = item.done, showDue = withDay) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             val link = MaterialTheme.colorScheme.primary
-            if (withCustomer && item.customerName != null) {
+            if (withCustomer && customerName != null) {
                 Text(
-                    item.customerName, style = MaterialTheme.typography.bodySmall, color = link,
+                    customerName, style = MaterialTheme.typography.bodySmall, color = link,
                     modifier = Modifier.clickable { item.customerId?.let(nav.customer) },
                 )
             }
-            if (withCustomer && item.customerName != null && item.caseTitle != null) {
+            if (withCustomer && customerName != null && caseTitle != null) {
                 Text("·", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
             }
-            if (item.caseTitle != null) {
+            if (caseTitle != null) {
                 Text(
-                    item.caseTitle, style = MaterialTheme.typography.bodySmall, color = link,
+                    caseTitle, style = MaterialTheme.typography.bodySmall, color = link,
                     modifier = Modifier.clickable { item.caseId?.let(nav.case) },
                 )
             }
