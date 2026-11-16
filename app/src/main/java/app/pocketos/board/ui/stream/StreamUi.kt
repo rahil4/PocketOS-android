@@ -114,13 +114,14 @@ fun TaskRow(
                 }
             }
             Column(Modifier.weight(1f).padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         Digits.fa(title), style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.align(Alignment.CenterVertically),
                         textDecoration = if (done) TextDecoration.LineThrough else null,
                         color = if (done) MaterialTheme.board.muted else MaterialTheme.colorScheme.onSurface,
                     )
-                    tags.forEach { TagChip(it) { onTag(it) } }
+                    tags.forEach { Box(Modifier.align(Alignment.CenterVertically)) { TagChip(it) { onTag(it) } } }
                 }
                 val sub = buildList {
                     if (due != null && showDue) add(DayLabel.of(due, today))
@@ -291,9 +292,9 @@ fun ItemCard(item: ItemEntity, vm: StreamViewModel, nowMillis: Long, onTag: (Str
 private fun NoteText(text: String, onTag: (String) -> Unit) {
     val tags = Tags.tagsIn(text)
     val shown = if (tags.isEmpty()) text else Tags.strip(text).ifEmpty { text }
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp), itemVerticalAlignment = Alignment.CenterVertically) {
-        Text(Digits.fa(shown), style = MaterialTheme.typography.bodyLarge)
-        tags.forEach { TagChip(it) { onTag(it) } }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(Digits.fa(shown), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.align(Alignment.CenterVertically))
+        tags.forEach { Box(Modifier.align(Alignment.CenterVertically)) { TagChip(it) { onTag(it) } } }
     }
 }
 
