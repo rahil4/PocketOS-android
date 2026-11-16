@@ -69,6 +69,7 @@ class StreamViewModel @Inject constructor(
     private val customerRepo: CustomerRepository,
     private val tagRepo: TagRepository,
     private val prefs: PrefRepository,
+    private val active: app.pocketos.board.data.repo.ActiveTargetRepository,
     val files: FileStore,
     private val locations: LocationFetcher,
     private val ui: UiMessenger,
@@ -102,29 +103,13 @@ class StreamViewModel @Inject constructor(
     }
 
     private fun loadActive() {
-        viewModelScope.launch {
-            val kid = prefs.getString(PrefRepository.ACTIVE_CASE)?.toLongOrNull()
-            val cid = prefs.getString(PrefRepository.ACTIVE_CUSTOMER)?.toLongOrNull()
-            val case = kid?.let { caseRepo.get(it) }?.takeIf { it.deletedAt == null }
-            val customer = cid?.let { customerRepo.get(it) }?.takeIf { it.deletedAt == null }
-            // پروندهٔ فعال حذف شده بود ← صندوق ورودی
-            target.value = when {
-                case != null -> Target(null, case.id)
-                customer != null -> Target(customer.id, null)
-                else -> Target.Inbox
-            }
-        }
+        viewModelScope.launch { target.value = active.current() }
     }
 
     /** مقصد را عوض می‌کند؛ در خانه در گوشی هم می‌ماند. */
     fun pickTarget(t: Target) {
         target.value = t
-        if (scope.value == StreamScope.Active) {
-            viewModelScope.launch {
-                prefs.setString(PrefRepository.ACTIVE_CASE, t.caseId?.toString() ?: "")
-                prefs.setString(PrefRepository.ACTIVE_CUSTOMER, t.customerId?.toString() ?: "")
-            }
-        }
+        if (scope.value == StreamScope.Active) viewModelScope.launch { active.set(t) }
     }
 
     val state: StateFlow<StreamState> = scope.filterNotNull().flatMapLatest { s ->

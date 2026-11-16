@@ -53,8 +53,13 @@ class HomeViewModel @Inject constructor(
     private val cases: CaseRepository,
     private val prefs: PrefRepository,
     private val ui: UiMessenger,
+    private val launch: app.pocketos.board.ui.LaunchRequests,
     private val clock: Clock,
 ) : ViewModel() {
+    val quickNote: StateFlow<Boolean> = launch.quickNote
+
+    fun consumeQuickNote() { launch.quickNote.value = false }
+
     /** با بازگشت به برنامه (شاید روز یا ساعت عوض شده) دوباره حساب می‌شود. */
     private val tick = MutableStateFlow(0)
     val tomorrow: LocalDate get() = LocalDate.now(clock).plusDays(1)

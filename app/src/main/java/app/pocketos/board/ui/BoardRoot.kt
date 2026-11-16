@@ -47,6 +47,7 @@ import app.pocketos.board.ui.evening.EveningScreen
 import app.pocketos.board.ui.home.AttentionScreen
 import app.pocketos.board.ui.home.HomeScreen
 import app.pocketos.board.ui.search.SearchScreen
+import app.pocketos.board.ui.settings.SettingsScreen
 import app.pocketos.board.ui.inbox.InboxScreen
 import app.pocketos.board.ui.tags.TagScreen
 import app.pocketos.board.ui.trash.TrashScreen
@@ -67,10 +68,15 @@ private const val INBOX = "inbox"
 private const val ATTENTION = "attention"
 private const val EVENING = "evening"
 private const val SEARCH = "search"
+private const val SETTINGS = "settings"
 private const val TAG = "tag/{name}"
 
 @HiltViewModel
-class RootViewModel @Inject constructor(val messenger: UiMessenger, val calendarTarget: app.pocketos.board.ui.calendar.CalendarTarget) : ViewModel()
+class RootViewModel @Inject constructor(
+    val messenger: UiMessenger,
+    val calendarTarget: app.pocketos.board.ui.calendar.CalendarTarget,
+    val launch: LaunchRequests,
+) : ViewModel()
 
 @Composable
 fun BoardRoot(root: RootViewModel = hiltViewModel()) {
@@ -87,6 +93,29 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
         }
     }
 
+    // اعلان، ویجت و اشتراک: مقصد را باز می‌کنند.
+    LaunchedEffect(Unit) {
+        root.launch.route.collect { r ->
+            if (r != null) {
+                val dest = when (r) {
+                    "home" -> Tab.Home.route
+                    "calendar" -> Tab.Calendar.route
+                    "customers" -> Tab.Customers.route
+                    "evening" -> EVENING
+                    "settings" -> SETTINGS
+                    else -> null
+                }
+                if (dest != null) {
+                    nav.navigate(dest) {
+                        if (dest == Tab.Home.route || dest == Tab.Calendar.route || dest == Tab.Customers.route) popUpTo(nav.graph.findStartDestination().id)
+                        launchSingleTop = true
+                    }
+                }
+                root.launch.route.value = null
+            }
+        }
+    }
+
     // صفحه‌های زیرمجموعهٔ «مشتری‌ها» تب مشتری‌ها را روشن نگه می‌دارند.
     val inCustomers = current == Tab.Customers.route || current == CUSTOMER || current == CASE || current == TRASH || current == INBOX || current == TAG
 
@@ -100,7 +129,7 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
                     Tab.entries.forEach { tab ->
                         val on = when (tab) {
                             Tab.Customers -> inCustomers
-                            Tab.Home -> current == Tab.Home.route || current == ATTENTION || current == EVENING || current == SEARCH
+                            Tab.Home -> current == Tab.Home.route || current == ATTENTION || current == EVENING || current == SEARCH || current == SETTINGS
                             else -> current == tab.route
                         }
                         val color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.board.muted
@@ -137,6 +166,7 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
                     onOpenInbox = { nav.navigate(INBOX) },
                     onOpenEvening = { nav.navigate(EVENING) },
                     onOpenSearch = { nav.navigate(SEARCH) },
+                    onOpenSettings = { nav.navigate(SETTINGS) },
                 )
             }
             composable(ATTENTION) {
@@ -145,6 +175,7 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
                     onOpenCase = { nav.navigate("case/$it") }, onOpenTag = { nav.navigate("tag/" + Uri.encode(it)) },
                 )
             }
+            composable(SETTINGS) { SettingsScreen(onBack = { nav.popBackStack() }, onOpenTrash = { nav.navigate(TRASH) }) }
             composable(EVENING) { EveningScreen(onBack = { nav.popBackStack() }) }
             composable(SEARCH) {
                 SearchScreen(

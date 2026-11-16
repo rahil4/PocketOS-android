@@ -41,10 +41,30 @@ fun CustomerFormDialog(
     initialPhone: String,
     confirmLabel: String,
     onDismiss: () -> Unit,
+    contactPicker: Boolean = false,
     onConfirm: (name: String, phone: String) -> Unit,
 ) {
     var name by rememberSaveable { mutableStateOf(initialName) }
     var phone by rememberSaveable { mutableStateOf(initialPhone) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    // انتخاب‌گر خود اندروید: بدون مجوز مخاطبین؛ هر بار یک مخاطب.
+    val pick = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { r ->
+        val uri = r.data?.data
+        if (r.resultCode == android.app.Activity.RESULT_OK && uri != null) {
+            runCatching {
+                ctx.contentResolver.query(
+                    uri,
+                    arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER),
+                    null, null, null,
+                )?.use { c ->
+                    if (c.moveToFirst()) {
+                        name = c.getString(0).orEmpty()
+                        phone = c.getString(1).orEmpty()
+                    }
+                }
+            }
+        }
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -55,6 +75,13 @@ fun CustomerFormDialog(
                     phone, { phone = it }, label = { Text("تلفن (اختیاری)") }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth(),
                 )
+                if (contactPicker) {
+                    Pill("از مخاطبین…") {
+                        runCatching {
+                            pick.launch(android.content.Intent(android.content.Intent.ACTION_PICK, android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI))
+                        }
+                    }
+                }
             }
         },
         confirmButton = { TextButton(enabled = name.isNotBlank(), onClick = { onConfirm(name, phone) }) { Text(confirmLabel) } },

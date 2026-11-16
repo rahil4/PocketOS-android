@@ -54,6 +54,7 @@ fun HomeScreen(
     onOpenInbox: () -> Unit,
     onOpenEvening: () -> Unit,
     onOpenSearch: () -> Unit,
+    onOpenSettings: () -> Unit,
     vm: HomeViewModel = hiltViewModel(),
     stream: StreamViewModel = hiltViewModel(),
 ) {
@@ -62,6 +63,14 @@ fun HomeScreen(
     LaunchedEffect(Unit) { stream.bind(StreamScope.Active) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refresh() }
     StreamOverlays(stream, overlays)
+    // «＋ یادداشت» ویجت: پنجرهٔ یادداشت باز شود.
+    val quick by vm.quickNote.collectAsStateWithLifecycle()
+    LaunchedEffect(quick) {
+        if (quick) {
+            overlays.openNote(false)
+            vm.consumeQuickNote()
+        }
+    }
     val nav = HomeNav(onOpenCustomer, onOpenCase, onOpenTag)
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
@@ -74,7 +83,7 @@ fun HomeScreen(
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                     Column(Modifier.weight(1f)) {
                         Text(st.greeting, fontSize = 23.sp, fontWeight = FontWeight.Medium, lineHeight = 34.sp)
-                        Text(st.todayLong, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
+                        Text(st.todayLong, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted, modifier = Modifier.clickable(onClick = onOpenSettings))
                     }
                     Box(
                         Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.board.slate).border(1.dp, MaterialTheme.board.line, CircleShape).clickable(onClick = onOpenSearch),

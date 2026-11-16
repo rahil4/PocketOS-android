@@ -30,6 +30,16 @@ class PrefRepository @Inject constructor(db: BoardDatabase) {
         const val CLOSED_ON = "closed_on"
         const val EVENING_HOUR = "evening_hour"
 
+        /** تنظیمات (کلیدها مثل وب‌اپ). */
+        const val THEME = "theme"
+        const val FSIZE = "fsize"
+        const val MORNING_ON = "morning_on"
+        const val MORNING_HOUR = "morning_hour"
+        const val EVENING_PUSH = "evening_push"
+        const val PUSH_NAMES = "push_names"
+        const val LAST_MORNING = "last_morning"
+        const val LAST_EVENING = "last_evening"
+
         /** آخرین نمای تقویم. */
         const val CAL_VIEW = "cal_view"
     }

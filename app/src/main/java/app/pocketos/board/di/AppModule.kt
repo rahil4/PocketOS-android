@@ -19,6 +19,11 @@ object AppModule {
     fun database(@ApplicationContext context: Context): BoardDatabase =
         Room.databaseBuilder(context, BoardDatabase::class.java, BoardDatabase.NAME).build()
 
+    @Provides
+    @Singleton
+    fun reminderSink(@ApplicationContext context: Context): app.pocketos.board.data.repo.ReminderSink =
+        app.pocketos.board.system.AndroidNotifier(context)
+
     /** ساعت قابل‌تعویض تا منطق وابسته به «امروز» آزمون‌پذیر بماند. */
     @Provides
     @Singleton

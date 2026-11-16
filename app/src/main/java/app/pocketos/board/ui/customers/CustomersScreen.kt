@@ -81,7 +81,7 @@ fun CustomersScreen(
     if (showNew) {
         CustomerFormDialog(
             title = "مشتری تازه", initialName = newName, initialPhone = "", confirmLabel = "ساخت",
-            onDismiss = { showNew = false },
+            onDismiss = { showNew = false }, contactPicker = true,
             onConfirm = { n, p ->
                 showNew = false
                 vm.create(n, p) { id -> onOpenCustomer(id) }

@@ -4,4 +4,5 @@
     <string name="tab_home">خانه</string>
     <string name="tab_calendar">تقویم</string>
     <string name="tab_customers">مشتری‌ها</string>
+    <string name="widget_description">کارهای امروز و ثبت سریع یادداشت</string>
 </resources>
