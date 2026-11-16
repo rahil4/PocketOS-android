@@ -197,6 +197,11 @@ class StreamViewModel @Inject constructor(
         }
     }
 
+    /** برداشتن «انجام شد» از یک کار (مثلاً در تقویم). */
+    fun undone(t: TaskEntity) {
+        viewModelScope.launch { taskRepo.undone(t.id) }
+    }
+
     fun setDay(t: TaskEntity, day: LocalDate) {
         viewModelScope.launch {
             val old = taskRepo.setDay(t.id, day)

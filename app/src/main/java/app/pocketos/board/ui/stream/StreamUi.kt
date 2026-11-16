@@ -71,12 +71,19 @@ private fun toast(ctx: android.content.Context, msg: String) = Toast.makeText(ct
 /** یک کار: حلقهٔ «انجام شد»، عنوان بدون #، چیپ برچسب، روز و تکرار، منوی ⋯ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TaskRow(task: TaskEntity, vm: StreamViewModel, onTag: (String) -> Unit) {
+fun TaskRow(
+    task: TaskEntity,
+    vm: StreamViewModel,
+    onTag: (String) -> Unit,
+    done: Boolean = false,
+    showDue: Boolean = true,
+    extra: (@Composable () -> Unit)? = null,
+) {
     var menu by remember { mutableStateOf(false) }
     var dialog by rememberSaveable { mutableStateOf("") }
     val today = vm.today
     val due = task.dueDay?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
-    val late = due != null && !due.isAfter(today)
+    val late = !done && due != null && !due.isAfter(today)
     val tags = Tags.tagsIn(task.title)
     val title = Tags.strip(task.title).ifEmpty { task.title }
 
@@ -90,13 +97,20 @@ fun TaskRow(task: TaskEntity, vm: StreamViewModel, onTag: (String) -> Unit) {
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surface).padding(start = 4.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        Box(Modifier.size(40.dp).clickable { vm.done(task) }, contentAlignment = Alignment.Center) {
-            Box(Modifier.size(20.dp).clip(CircleShape).background(MaterialTheme.board.slate).padding(2.dp).background(MaterialTheme.colorScheme.surface, CircleShape))
+        Box(Modifier.size(40.dp).clickable { if (done) vm.undone(task) else vm.done(task) }, contentAlignment = Alignment.Center) {
+            Box(
+                Modifier.size(20.dp).clip(CircleShape).background(if (done) MaterialTheme.board.ok else MaterialTheme.board.slate)
+                    .padding(2.dp).background(if (done) MaterialTheme.board.ok else MaterialTheme.colorScheme.surface, CircleShape),
+            )
         }
         Column(Modifier.weight(1f).padding(top = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(Digits.fa(title), style = MaterialTheme.typography.bodyMedium)
+            Text(
+                Digits.fa(title), style = MaterialTheme.typography.bodyMedium,
+                textDecoration = if (done) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
+                color = if (done) MaterialTheme.board.muted else MaterialTheme.colorScheme.onSurface,
+            )
             val sub = buildList {
-                if (due != null) add(DayLabel.of(due, today))
+                if (due != null && showDue) add(DayLabel.of(due, today))
                 if (task.repeat != null) add(When.repeatLabel(task.repeat))
             }.joinToString(" · ")
             if (sub.isNotEmpty()) {
@@ -109,6 +123,7 @@ fun TaskRow(task: TaskEntity, vm: StreamViewModel, onTag: (String) -> Unit) {
             if (tags.isNotEmpty()) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) { tags.forEach { Chip("#$it") { onTag(it) } } }
             }
+            extra?.invoke()
         }
         Box {
             TextButton({ menu = true }) { Text("⋯") }

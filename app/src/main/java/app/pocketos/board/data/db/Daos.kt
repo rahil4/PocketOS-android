@@ -111,6 +111,33 @@ interface CaseDao {
     suspend fun touch(id: Long, now: Long)
 
     @Query(
+        """SELECT k.id AS id, k.title AS title, k.customerId AS customerId, c.name AS customerName, k.dueDay AS dueDay
+           FROM cases k JOIN customers c ON c.id = k.customerId
+           WHERE k.deletedAt IS NULL AND c.deletedAt IS NULL AND k.dueDay IS NOT NULL
+             AND k.status NOT IN ('final', 'archive') AND k.dueDay >= :from AND k.dueDay <= :to
+           ORDER BY k.dueDay""",
+    )
+    fun observeDueRange(from: String, to: String): Flow<List<CaseDueRow>>
+
+    @Query(
+        """SELECT k.id AS id, k.title AS title, k.customerId AS customerId, c.name AS customerName, k.dueDay AS dueDay
+           FROM cases k JOIN customers c ON c.id = k.customerId
+           WHERE k.deletedAt IS NULL AND c.deletedAt IS NULL AND k.dueDay IS NOT NULL
+             AND k.status NOT IN ('final', 'archive') AND k.dueDay < :before
+           ORDER BY k.dueDay LIMIT 100""",
+    )
+    fun observeDueBefore(before: String): Flow<List<CaseDueRow>>
+
+    @Query(
+        """SELECT k.id AS id, k.title AS title, k.customerId AS customerId, c.name AS customerName, k.dueDay AS dueDay
+           FROM cases k JOIN customers c ON c.id = k.customerId
+           WHERE k.deletedAt IS NULL AND c.deletedAt IS NULL AND k.dueDay IS NOT NULL
+             AND k.status NOT IN ('final', 'archive') AND (k.searchText LIKE :pattern OR c.searchText LIKE :pattern)
+           ORDER BY k.dueDay LIMIT 100""",
+    )
+    suspend fun searchDue(pattern: String): List<CaseDueRow>
+
+    @Query(
         """SELECT k.id AS id, k.title AS title, k.customerId AS customerId, c.name AS customerName
            FROM cases k JOIN customers c ON c.id = k.customerId
            WHERE k.deletedAt IS NULL AND c.deletedAt IS NULL AND k.status NOT IN ('final', 'archive')
@@ -182,6 +209,18 @@ interface BulkDao {
     @Query("DELETE FROM customers WHERE deletedAt IS NOT NULL AND deletedAt < :cutoff")
     suspend fun purgeCustomers(cutoff: Long)
 }
+
+/** کار همراه نام مشتری/پرونده برای تقویم و جست‌وجو. */
+data class CalTaskRow(
+    @Embedded val task: TaskEntity,
+    val customerName: String?,
+    val caseTitle: String?,
+    val customerSearch: String?,
+    val caseSearch: String?,
+)
+
+/** مهلت پروندهٔ باز. */
+data class CaseDueRow(val id: Long, val title: String, val customerId: Long, val customerName: String, val dueDay: String)
 
 data class KindCount(val kind: String, val n: Int)
 
@@ -277,6 +316,37 @@ interface TaskDao {
            ORDER BY dueDay IS NULL, dueDay, createdAt""",
     )
     fun observeOpenByCase(caseId: Long): Flow<List<TaskEntity>>
+
+    @Query(
+        """SELECT t.*, c.name AS customerName, k.title AS caseTitle, c.searchText AS customerSearch, k.searchText AS caseSearch
+           FROM tasks t LEFT JOIN customers c ON c.id = t.customerId LEFT JOIN cases k ON k.id = t.caseId
+           WHERE t.deletedAt IS NULL AND (c.id IS NULL OR c.deletedAt IS NULL)
+             AND t.dueDay >= :from AND t.dueDay <= :to AND (:like IS NULL OR t.searchText LIKE :like)
+           ORDER BY t.dueDay, t.doneAt IS NOT NULL, t.createdAt LIMIT :limit""",
+    )
+    fun observeCalRange(from: String, to: String, like: String?, limit: Int): Flow<List<CalTaskRow>>
+
+    @Query(
+        """SELECT t.*, c.name AS customerName, k.title AS caseTitle, c.searchText AS customerSearch, k.searchText AS caseSearch
+           FROM tasks t LEFT JOIN customers c ON c.id = t.customerId LEFT JOIN cases k ON k.id = t.caseId
+           WHERE t.deletedAt IS NULL AND (c.id IS NULL OR c.deletedAt IS NULL) AND t.doneAt IS NULL
+             AND t.dueDay < :before AND (:like IS NULL OR t.searchText LIKE :like)
+           ORDER BY t.dueDay LIMIT 100""",
+    )
+    fun observeOverdue(before: String, like: String?): Flow<List<CalTaskRow>>
+
+    @Query(
+        """SELECT t.*, c.name AS customerName, k.title AS caseTitle, c.searchText AS customerSearch, k.searchText AS caseSearch
+           FROM tasks t LEFT JOIN customers c ON c.id = t.customerId LEFT JOIN cases k ON k.id = t.caseId
+           WHERE t.deletedAt IS NULL AND (c.id IS NULL OR c.deletedAt IS NULL)
+             AND (t.searchText LIKE :pattern OR c.searchText LIKE :pattern OR k.searchText LIKE :pattern)
+           ORDER BY t.dueDay IS NULL, t.dueDay LIMIT 400""",
+    )
+    suspend fun searchCal(pattern: String): List<CalTaskRow>
+
+    /** هر تغییر در کارها، مشتری‌ها یا پرونده‌ها این را دوباره منتشر می‌کند (برای تازه‌سازی نتیجهٔ جست‌وجو). */
+    @Query("SELECT (SELECT COUNT(*) FROM tasks) + (SELECT COUNT(*) FROM customers) + (SELECT COUNT(*) FROM cases)")
+    fun observeVersion(): Flow<Int>
 
     @Query("SELECT COUNT(*) FROM tasks WHERE caseId = :caseId AND deletedAt IS NULL AND doneAt IS NULL")
     suspend fun countOpenInCase(caseId: Long): Int

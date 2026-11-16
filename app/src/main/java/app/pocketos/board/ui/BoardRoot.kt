@@ -104,7 +104,9 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
     ) { padding ->
         NavHost(nav, startDestination = Tab.Home.route, modifier = Modifier.padding(padding)) {
             composable(Tab.Home.route) { HomeScreen() }
-            composable(Tab.Calendar.route) { CalendarScreen() }
+            composable(Tab.Calendar.route) {
+                CalendarScreen(onOpenCustomer = { nav.navigate("customer/$it") }, onOpenCase = { nav.navigate("case/$it") })
+            }
             composable(Tab.Customers.route) {
                 CustomersScreen(
                     onOpenCustomer = { nav.navigate("customer/$it") },
