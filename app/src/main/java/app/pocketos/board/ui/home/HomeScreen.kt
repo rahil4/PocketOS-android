@@ -54,6 +54,7 @@ fun HomeScreen(
     onOpenInbox: () -> Unit,
     onOpenEvening: () -> Unit,
     onOpenSearch: () -> Unit,
+    onOpenChat: () -> Unit,
     onOpenSettings: () -> Unit,
     vm: HomeViewModel = hiltViewModel(),
     stream: StreamViewModel = hiltViewModel(),
@@ -85,6 +86,11 @@ fun HomeScreen(
                         Text(st.greeting, fontSize = 23.sp, fontWeight = FontWeight.Medium, lineHeight = 34.sp)
                         Text(st.todayLong, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted, modifier = Modifier.clickable(onClick = onOpenSettings))
                     }
+                    Box(
+                        Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.board.slate).border(1.dp, MaterialTheme.board.line, CircleShape).clickable(onClick = onOpenChat),
+                        contentAlignment = Alignment.Center,
+                    ) { Text("💬", fontSize = 20.sp) }
+                    Box(Modifier.size(6.dp)) {}
                     Box(
                         Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.board.slate).border(1.dp, MaterialTheme.board.line, CircleShape).clickable(onClick = onOpenSearch),
                         contentAlignment = Alignment.Center,

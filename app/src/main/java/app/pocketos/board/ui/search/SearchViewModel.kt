@@ -18,8 +18,11 @@ import javax.inject.Inject
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
-class SearchViewModel @Inject constructor(private val repo: SearchRepository) : ViewModel() {
-    val query = MutableStateFlow("")
+class SearchViewModel @Inject constructor(
+    savedState: androidx.lifecycle.SavedStateHandle,
+    private val repo: SearchRepository,
+) : ViewModel() {
+    val query = MutableStateFlow(savedState.get<String>("q").orEmpty())
 
     /** null = هنوز چیزی نوشته نشده. */
     val results: StateFlow<GlobalResults?> = query.debounce(200)

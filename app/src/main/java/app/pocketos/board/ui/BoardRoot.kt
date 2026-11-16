@@ -47,6 +47,8 @@ import app.pocketos.board.ui.evening.EveningScreen
 import app.pocketos.board.ui.home.AttentionScreen
 import app.pocketos.board.ui.home.HomeScreen
 import app.pocketos.board.ui.search.SearchScreen
+import app.pocketos.board.ui.chat.ChatScreen
+import app.pocketos.board.domain.NavTarget
 import app.pocketos.board.ui.settings.SettingsScreen
 import app.pocketos.board.ui.inbox.InboxScreen
 import app.pocketos.board.ui.tags.TagScreen
@@ -67,7 +69,8 @@ private const val TRASH = "trash"
 private const val INBOX = "inbox"
 private const val ATTENTION = "attention"
 private const val EVENING = "evening"
-private const val SEARCH = "search"
+private const val SEARCH = "search?q={q}"
+private const val CHAT = "chat"
 private const val SETTINGS = "settings"
 private const val TAG = "tag/{name}"
 
@@ -129,7 +132,7 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
                     Tab.entries.forEach { tab ->
                         val on = when (tab) {
                             Tab.Customers -> inCustomers
-                            Tab.Home -> current == Tab.Home.route || current == ATTENTION || current == EVENING || current == SEARCH || current == SETTINGS
+                            Tab.Home -> current == Tab.Home.route || current == ATTENTION || current == EVENING || current == SEARCH || current == SETTINGS || current == CHAT
                             else -> current == tab.route
                         }
                         val color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.board.muted
@@ -165,7 +168,8 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
                     },
                     onOpenInbox = { nav.navigate(INBOX) },
                     onOpenEvening = { nav.navigate(EVENING) },
-                    onOpenSearch = { nav.navigate(SEARCH) },
+                    onOpenSearch = { nav.navigate("search?q=") },
+                    onOpenChat = { nav.navigate(CHAT) },
                     onOpenSettings = { nav.navigate(SETTINGS) },
                 )
             }
@@ -175,9 +179,23 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
                     onOpenCase = { nav.navigate("case/$it") }, onOpenTag = { nav.navigate("tag/" + Uri.encode(it)) },
                 )
             }
+            composable(CHAT) {
+                ChatScreen(
+                    onBack = { nav.popBackStack() },
+                    onNavigate = { t ->
+                        when (t) {
+                            is NavTarget.Case -> nav.navigate("case/${t.id}")
+                            is NavTarget.Customer -> nav.navigate("customer/${t.id}")
+                            NavTarget.Inbox -> nav.navigate(INBOX)
+                            is NavTarget.Tag -> nav.navigate("tag/" + Uri.encode(t.tag))
+                            is NavTarget.Search -> nav.navigate("search?q=" + Uri.encode(t.q))
+                        }
+                    },
+                )
+            }
             composable(SETTINGS) { SettingsScreen(onBack = { nav.popBackStack() }, onOpenTrash = { nav.navigate(TRASH) }) }
             composable(EVENING) { EveningScreen(onBack = { nav.popBackStack() }) }
-            composable(SEARCH) {
+            composable(SEARCH, arguments = listOf(navArgument("q") { type = NavType.StringType; defaultValue = "" })) {
                 SearchScreen(
                     onBack = { nav.popBackStack() }, onOpenCustomer = { nav.navigate("customer/$it") },
                     onOpenCase = { nav.navigate("case/$it") }, onOpenTag = { nav.navigate("tag/" + Uri.encode(it)) },

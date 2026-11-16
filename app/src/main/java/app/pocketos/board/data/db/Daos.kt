@@ -111,6 +111,16 @@ interface CaseDao {
     suspend fun touch(id: Long, now: Long)
 
     @Query(
+        """SELECT k.id AS id, k.title AS title, c.name AS customerName, k.status AS status
+           FROM cases k LEFT JOIN customers c ON c.id = k.customerId
+           WHERE k.deletedAt IS NULL AND k.status NOT IN ('final', 'archive') ORDER BY k.lastActivity DESC LIMIT :limit""",
+    )
+    suspend fun openBrief(limit: Int): List<OpenCaseBrief>
+
+    @Query("SELECT COUNT(*) FROM cases WHERE customerId = :customerId AND deletedAt IS NULL AND status NOT IN ('final', 'archive')")
+    suspend fun countOpenOfCustomer(customerId: Long): Int
+
+    @Query(
         """SELECT k.id AS id, k.title AS title, k.customerId AS customerId, c.name AS customerName,
                   k.status AS status, k.dueDay AS dueDay, k.lastActivity AS lastActivity
            FROM cases k JOIN customers c ON c.id = k.customerId
@@ -252,6 +262,11 @@ data class OpenCaseRow(
     val lastActivity: Long,
 )
 
+data class CustomerCount(val id: Long, val name: String, val n: Int)
+
+/** پروندهٔ باز با نام مشتری و وضعیت (پاسخ دستیار). */
+data class OpenCaseBrief(val id: Long, val title: String, val customerName: String?, val status: String)
+
 data class KindCount(val kind: String, val n: Int)
 
 /** پروندهٔ باز همراه نام مشتری، برای انتخاب‌گر «ثبت در». */
@@ -326,6 +341,12 @@ interface ItemDao {
            ORDER BY i.createdAt DESC LIMIT 200""",
     )
     suspend fun searchNotes(pattern: String): List<NoteRow>
+
+    @Query(
+        """SELECT i.*, c.name AS customerName FROM items i LEFT JOIN customers c ON c.id = i.customerId
+           WHERE i.deletedAt IS NULL AND i.kind = 'text' AND i.text != '' ORDER BY i.createdAt DESC, i.id DESC LIMIT :limit""",
+    )
+    suspend fun recentTextNotes(limit: Int): List<NoteRow>
 
     @Query("SELECT COUNT(*) FROM items WHERE deletedAt IS NULL AND kind != 'event' AND createdAt >= :since")
     suspend fun countCreatedSince(since: Long): Int
@@ -407,6 +428,16 @@ interface TaskDao {
            ORDER BY t.dueDay, t.id""",
     )
     suspend fun openUpTo(day: String): List<CalTaskRow>
+
+    @Query(
+        """SELECT c.id AS id, c.name AS name, COUNT(*) AS n FROM tasks t JOIN customers c ON c.id = t.customerId
+           WHERE t.deletedAt IS NULL AND t.doneAt IS NULL AND c.deletedAt IS NULL
+           GROUP BY c.id ORDER BY n DESC, c.name LIMIT :limit""",
+    )
+    suspend fun openCountsByCustomer(limit: Int): List<CustomerCount>
+
+    @Query("SELECT COUNT(*) FROM tasks WHERE customerId = :customerId AND deletedAt IS NULL AND doneAt IS NULL")
+    suspend fun countOpenOfCustomer(customerId: Long): Int
 
     @Query("SELECT COUNT(*) FROM tasks WHERE deletedAt IS NULL AND doneAt >= :since")
     suspend fun countDoneSince(since: Long): Int
