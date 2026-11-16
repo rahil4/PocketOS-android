@@ -4,16 +4,14 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- برگهٔ دفتر -->
+    <!-- سه نوار؛ همان نشانهٔ وب‌اپ (راست‌به‌چپ) -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M34,28h40a4,4 0 0,1 4,4v44a4,4 0 0,1 -4,4H34a4,4 0 0,1 -4,-4V32a4,4 0 0,1 4,-4z" />
-    <!-- نشانهٔ کهربایی -->
+        android:fillColor="#7BD89A"
+        android:pathData="M36.07,37.80h35.86a3.67,3.67 0 0,1 0,7.34h-35.86a3.67,3.67 0 0,1 0,-7.34z" />
     <path
-        android:fillColor="#A7681A"
-        android:pathData="M58,28h12v22l-6,-5l-6,5z" />
-    <!-- خط‌ها -->
+        android:fillColor="#E9F0EA"
+        android:pathData="M45.58,50.33h26.35a3.67,3.67 0 0,1 0,7.34h-26.35a3.67,3.67 0 0,1 0,-7.34z" />
     <path
-        android:fillColor="#C6D6EA"
-        android:pathData="M38,58h32v3H38zM38,66h24v3H38z" />
+        android:fillColor="#E9F0EA"
+        android:pathData="M55.08,62.86h16.85a3.67,3.67 0 0,1 0,7.34h-16.85a3.67,3.67 0 0,1 0,-7.34z" />
 </vector>

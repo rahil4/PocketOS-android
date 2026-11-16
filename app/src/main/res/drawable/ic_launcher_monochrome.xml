@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- سه نوار؛ همان نشانهٔ وب‌اپ (راست‌به‌چپ) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M36.07,37.80h35.86a3.67,3.67 0 0,1 0,7.34h-35.86a3.67,3.67 0 0,1 0,-7.34z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M45.58,50.33h26.35a3.67,3.67 0 0,1 0,7.34h-26.35a3.67,3.67 0 0,1 0,-7.34z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M55.08,62.86h16.85a3.67,3.67 0 0,1 0,7.34h-16.85a3.67,3.67 0 0,1 0,-7.34z" />
+</vector>
