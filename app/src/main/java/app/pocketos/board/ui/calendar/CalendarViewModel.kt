@@ -54,7 +54,6 @@ class CalendarViewModel @Inject constructor(
     private val tag = MutableStateFlow<String?>(null)
 
     val query = MutableStateFlow("")
-    val searching = MutableStateFlow(false)
 
     init {
         viewModelScope.launch { view.value = CalView.of(prefs.getString(PrefRepository.CAL_VIEW)) }
@@ -97,6 +96,13 @@ class CalendarViewModel @Inject constructor(
     fun go(dir: Int) { anchor.value = CalRange.shift(view.value, anchor.value, dir) }
 
     fun select(day: LocalDate) { anchor.value = day }
+
+    /** از نتیجهٔ جست‌وجو یا عنوان روز: برو به نمای «روز» همان روز. */
+    fun openDay(day: LocalDate) {
+        query.value = ""
+        anchor.value = day
+        setView(CalView.DAY)
+    }
 
     fun setTag(t: String?) { tag.value = t }
 }

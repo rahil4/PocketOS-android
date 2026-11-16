@@ -86,6 +86,19 @@ class CalendarTest {
     }
 
     @Test
+    fun marksForMonthGrid() {
+        val due = CalItem("k1", today.plusDays(3), "مهلت: پرونده", 1, "الف", 9, "پرونده", null, false, null)
+        val items = listOf(
+            item("t1", today), item("t2", today.minusDays(2)), item("t3", today.minusDays(5), done = true), due,
+        )
+        val m = CalendarLogic.marks(items, today)
+        assertEquals(DayMarks(task = true, deadline = false, late = false, doneOnly = false), m[today])
+        assertEquals(DayMarks(task = true, deadline = false, late = true, doneOnly = false), m[today.minusDays(2)])
+        assertEquals(DayMarks(task = false, deadline = false, late = false, doneOnly = true), m[today.minusDays(5)])
+        assertEquals(DayMarks(task = false, deadline = true, late = false, doneOnly = false), m[today.plusDays(3)])
+    }
+
+    @Test
     fun dayListOpenFirstThenDone() {
         val d = CalendarLogic.byDay(listOf(item("t1", today, "ب", done = true), item("t2", today, "الف"), item("t3", today, "ت")))
         assertEquals(listOf("t2", "t3", "t1"), d[today]!!.map { it.key })

@@ -66,7 +66,7 @@ class CalendarRepositoryTest {
         val titles = r.entries.map { it.item.title }
         assertTrue("تحویل نقشه" in titles)
         assertTrue("تماس" in titles)
-        assertTrue("مهلت پرونده: افراز زمین" in titles)
+        assertTrue("مهلت: افراز زمین" in titles)
         assertFalse("حذف‌شده" in titles)
         assertFalse("بیرون بازه" in titles)
         assertTrue(r.entries.first { it.item.taskId == done }.item.done)
@@ -102,7 +102,7 @@ class CalendarRepositoryTest {
         tasks.done(d)
         tasks.create(Target(c), "امروز", today)
         val od = cal.observeOverdue(today, null).first()
-        assertEquals(listOf("باز و گذشته", "مهلت پرونده: گذشته"), od.map { it.item.title })
+        assertEquals(listOf("باز و گذشته", "مهلت: گذشته"), od.map { it.item.title })
     }
 
     @Test

@@ -43,7 +43,7 @@ class CalendarRepository @Inject constructor(db: BoardDatabase) {
         val day = runCatching { LocalDate.parse(dueDay) }.getOrNull() ?: return null
         return CalEntry(
             CalItem(
-                key = "k$id", day = day, title = "مهلت پرونده: $title", customerId = customerId, customerName = customerName,
+                key = "k$id", day = day, title = "مهلت: $title", customerId = customerId, customerName = customerName,
                 caseId = id, caseTitle = title, taskId = null, done = false, repeat = null,
             ),
             null,

@@ -89,6 +89,9 @@ data class CalItem(
 
 enum class Dot { NONE, OPEN, ALERT, DONE }
 
+/** نشانه‌های یک روز در شبکهٔ ماه: کار باز، مهلت پرونده، مانده (باز و پیش از امروز). doneOnly: فقط انجام‌شده. */
+data class DayMarks(val task: Boolean, val deadline: Boolean, val late: Boolean, val doneOnly: Boolean)
+
 data class CalGroup(val customerId: Long?, val name: String, val items: List<CalItem>) {
     val openCount: Int get() = items.count { !it.done }
 }
@@ -109,6 +112,17 @@ object CalendarLogic {
                 day <= today -> Dot.ALERT
                 else -> Dot.OPEN
             }
+        }
+
+    fun marks(items: List<CalItem>, today: LocalDate): Map<LocalDate, DayMarks> =
+        items.groupBy { it.day }.mapValues { (day, v) ->
+            val open = v.filter { !it.done }
+            DayMarks(
+                task = open.any { !it.isCaseDue },
+                deadline = open.any { it.isCaseDue },
+                late = open.isNotEmpty() && day < today,
+                doneOnly = open.isEmpty(),
+            )
         }
 
     /** گروه‌بندی بر اساس مشتری؛ گروه‌های دارای کار باز اول، «بدون مشتری» آخر. */
