@@ -24,6 +24,14 @@ jobs:
         run: ./gradlew :app:testDebugUnitTest --stacktrace
       - name: Build debug APK
         run: ./gradlew :app:assembleDebug --stacktrace
+      - name: Verify stable signing key
+        run: |
+          APK=$(ls app/build/outputs/apk/debug/*.apk | head -1)
+          EXPECTED=$(keytool -list -keystore app/board-debug.keystore -storepass android 2>/dev/null | grep 'SHA-256' | sed 's/.*: //')
+          ACTUAL=$(keytool -printcert -jarfile "$APK" 2>/dev/null | grep 'SHA256' | sed 's/.*: //')
+          echo "expected=$EXPECTED"
+          echo "actual=$ACTUAL"
+          test -n "$EXPECTED" && test "$EXPECTED" = "$ACTUAL"
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
