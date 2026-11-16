@@ -199,9 +199,11 @@ class AssistantRepositoryTest {
         assertEquals("مشتری‌ای با «ناشناس» پیدا نشد.", (one("تلفن ناشناس") as Block.Text).text)
         assertEquals("چه کاری؟ مثلاً «فردا برای رنجبر تحویل نقشه»", (one("فردا برای رنجبر") as Block.Text).text)
 
-        val search = bot.reply("رنجبر نقشه باغ")
+        // نام مشتری وسط جمله ← همان مشتری (تطبیق جزئی، مثل وب‌اپ)
+        assertTrue(one("رنجبر نقشه باغ") is Block.CustomerCard)
+        val search = bot.reply("نقشه باغ")
         assertTrue(search.last() is Block.Link)
-        assertEquals(NavTarget.Search("رنجبر نقشه باغ"), (search.last() as Block.Link).nav)
+        assertEquals(NavTarget.Search("نقشه باغ"), (search.last() as Block.Link).nav)
         val near = bot.reply("رنجب")
         assertTrue(near.first() is Block.Choices) // مشتری‌های نزدیک
     }
