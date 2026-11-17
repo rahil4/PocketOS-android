@@ -56,7 +56,6 @@ fun HomeScreen(
     onOpenSearch: () -> Unit,
     onOpenChat: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenTree: () -> Unit,
     vm: HomeViewModel = hiltViewModel(),
     stream: StreamViewModel = hiltViewModel(),
     tree: TreeViewModel = hiltViewModel(),
@@ -99,7 +98,7 @@ fun HomeScreen(
                     ) { Icon(Icons.Filled.Search, contentDescription = "جست‌وجو", tint = MaterialTheme.colorScheme.onSurface) }
                 }
             }
-            item("tree") { TreeCard(onOpenCustomer, onOpenTree, tree) }
+            item("growth") { GrowthCard(tree) }
             item("cal") {
                 Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("تقویم و کارهای روز ←", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted, modifier = Modifier.clickable(onClick = onOpenCalendar))

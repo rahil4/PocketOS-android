@@ -72,7 +72,6 @@ private const val EVENING = "evening"
 private const val SEARCH = "search?q={q}"
 private const val CHAT = "chat"
 private const val SETTINGS = "settings"
-private const val TREE = "tree"
 private const val TAG = "tag/{name}"
 
 @HiltViewModel
@@ -172,7 +171,6 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
                     onOpenSearch = { nav.navigate("search?q=") },
                     onOpenChat = { nav.navigate(CHAT) },
                     onOpenSettings = { nav.navigate(SETTINGS) },
-                    onOpenTree = { nav.navigate(TREE) },
                 )
             }
             composable(ATTENTION) {
@@ -195,7 +193,6 @@ fun BoardRoot(root: RootViewModel = hiltViewModel()) {
                     },
                 )
             }
-            composable(TREE) { app.pocketos.board.ui.home.TreeScreen(onBack = { nav.popBackStack() }, onOpenCustomer = { nav.navigate("customer/$it") }) }
             composable(SETTINGS) { SettingsScreen(onBack = { nav.popBackStack() }, onOpenTrash = { nav.navigate(TRASH) }) }
             composable(EVENING) { EveningScreen(onBack = { nav.popBackStack() }) }
             composable(SEARCH, arguments = listOf(navArgument("q") { type = NavType.StringType; defaultValue = "" })) {
