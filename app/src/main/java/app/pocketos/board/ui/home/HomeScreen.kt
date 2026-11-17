@@ -100,32 +100,10 @@ fun HomeScreen(
                 }
             }
             item("tree") { TreeCard(onOpenCustomer, onOpenTree, tree) }
-            item("sec") {
-                Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("امروز", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted, modifier = Modifier.weight(1f))
-                    Text("تقویم ←", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted, modifier = Modifier.clickable(onClick = onOpenCalendar))
+            item("cal") {
+                Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("تقویم و کارهای روز ←", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted, modifier = Modifier.clickable(onClick = onOpenCalendar))
                 }
-            }
-            if (st.loaded && st.groups.isEmpty()) {
-                item("calm") {
-                    Column(Modifier.fillMaxWidth().padding(vertical = 36.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("✓", fontSize = 34.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                        Text("برای امروز کاری نیست", fontSize = 19.sp, color = MaterialTheme.board.muted)
-                    }
-                }
-            }
-            items(st.groups.size, key = { "g${st.groups[it].customerId}" }) { i ->
-                CustomerGroupBlock(
-                    st.groups[i], defaultOpen = i == 0 || st.groups.size <= 2, stream = stream, nav = nav,
-                    onCaseDone = { vm.caseDone(it.entry.title, it.entry.caseId ?: return@CustomerGroupBlock) },
-                    onCaseKeep = { vm.caseKeep(it.entry.caseId ?: return@CustomerGroupBlock) },
-                )
-            }
-            if (st.extraN > 0) {
-                item("extra") { MoreLink(Digits.fa("${st.extraN} مورد دیگر ←"), onOpenAttention) }
-            }
-            if (st.tomorrowN > 0) {
-                item("tomorrow") { MoreLink(Digits.fa("فردا: ${st.tomorrowN} کار ←")) { onOpenTomorrow(vm.tomorrow) } }
             }
             if (st.inboxN > 0) {
                 item("inbox") { LinkCard(Digits.fa("${st.inboxN} مورد در صندوق"), surface = true, onClick = onOpenInbox) }
