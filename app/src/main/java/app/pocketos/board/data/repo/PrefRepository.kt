@@ -22,7 +22,7 @@ class PrefRepository @Inject constructor(db: BoardDatabase) {
         /** «پرونده هم نهایی شود؟» دیگر پرسیده نشود. */
         const val NO_FINISH_ASK = "no_finish_ask"
 
-        /** پروندهٔ/مشتریِ فعال برای ثبت از خانه. */
+        /** پروندهٔ/متقاضیِ فعال برای ثبت از خانه. */
         const val ACTIVE_CUSTOMER = "active_customer"
         const val ACTIVE_CASE = "active_case"
 

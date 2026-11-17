@@ -113,7 +113,7 @@ class CalendarTest {
             item("t4", today, cust = 3, name = "کریمی"),
         )
         val g = CalendarLogic.groupByCustomer(items)
-        assertEquals(listOf("رنجبر", "کریمی", "محمدی", "بدون مشتری"), g.map { it.name })
+        assertEquals(listOf("رنجبر", "کریمی", "محمدی", "بدون متقاضی"), g.map { it.name })
         assertEquals(1, g[0].openCount)
     }
 }

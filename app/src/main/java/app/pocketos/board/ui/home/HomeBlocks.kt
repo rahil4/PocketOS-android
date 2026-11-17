@@ -44,7 +44,7 @@ class HomeNav(
     val tag: (String) -> Unit,
 )
 
-/** گروه مشتری (مثل وب‌اپ): نوار آبی‌خاکستری و کارهای تو رفته با خط ارتباط. */
+/** گروه متقاضی (مثل وب‌اپ): نوار آبی‌خاکستری و کارهای تو رفته با خط ارتباط. */
 @Composable
 fun CustomerGroupBlock(
     group: HomeGroupUi,
@@ -55,7 +55,7 @@ fun CustomerGroupBlock(
     onCaseKeep: (HomeRow) -> Unit,
 ) {
     var open by rememberSaveable(group.customerId, group.rows.size) { mutableStateOf(defaultOpen) }
-    val name = group.name ?: "بدون مشتری"
+    val name = group.name ?: "بدون متقاضی"
     CustomerCard {
         Row(
             Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 12.dp, vertical = 9.dp),

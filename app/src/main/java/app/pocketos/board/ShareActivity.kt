@@ -35,7 +35,7 @@ class ShareActivity : ComponentActivity() {
             val r = handler.handle(text, uris.toList())
             val msg = buildList {
                 if (r.items > 0) add(Digits.fa("${r.items} مورد دریافت شد"))
-                if (r.contacts > 0) add(Digits.fa("${r.contacts} مشتری از مخاطبین افزوده شد"))
+                if (r.contacts > 0) add(Digits.fa("${r.contacts} متقاضی از مخاطبین افزوده شد"))
                 if (r.failed > 0) add(Digits.fa("${r.failed} مورد خوانده نشد"))
             }.joinToString(" · ").ifEmpty { "چیزی برای دریافت نبود" }
             Toast.makeText(applicationContext, msg, Toast.LENGTH_LONG).show()

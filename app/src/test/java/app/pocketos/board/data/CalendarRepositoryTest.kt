@@ -125,7 +125,7 @@ class CalendarRepositoryTest {
         tasks.done(old)
         tasks.create(Target(c), "بی‌ربط", today.plusDays(2))
 
-        // نام مشتری: همهٔ کارهایش + مهلت پرونده
+        // نام متقاضی: همهٔ کارهایش + مهلت پرونده
         val byCustomer = cal.search("رنجبر", today)
         assertEquals(3 + 1 - 0, byCustomer.upcoming.size + byCustomer.past.size)
         // پروندهٔ مهلت‌دار

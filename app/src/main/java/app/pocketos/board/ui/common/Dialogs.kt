@@ -33,7 +33,7 @@ import app.pocketos.board.domain.Normalize
 import app.pocketos.board.ui.theme.board
 import java.time.LocalDate
 
-/** گفت‌وگوی «نام + تلفن» برای مشتری. */
+/** گفت‌وگوی «نام + تلفن» برای متقاضی. */
 @Composable
 fun CustomerFormDialog(
     title: String,
@@ -131,7 +131,7 @@ fun CaseFormDialog(
 
 data class PickItem(val id: Long, val name: String, val phone: String)
 
-/** انتخاب یک مشتری با جست‌وجو (ادغام، انتقال پرونده). */
+/** انتخاب یک متقاضی با جست‌وجو (ادغام، انتقال پرونده). */
 @Composable
 fun CustomerPickerDialog(
     title: String,

@@ -91,7 +91,7 @@ class AssistantRepositoryTest {
     fun emptyAnswersAreCalm() = runBlocking {
         assertEquals("برای امروز کاری نیست ✓", (one("کارهای امروز") as Block.Text).text)
         assertEquals("کار مانده‌ای نیست ✓", (one("کارهای عقب‌افتاده") as Block.Text).text)
-        assertEquals("هیچ مشتری‌ای کار باز ندارد ✓", (one("کی کار دارد؟") as Block.Text).text)
+        assertEquals("هیچ متقاضی‌ای کار باز ندارد ✓", (one("کی کار دارد؟") as Block.Text).text)
         assertEquals("پرونده‌ی بازی نیست.", (one("پرونده‌های باز") as Block.Text).text)
         assertEquals("یادداشتی نیست.", (one("یادداشت‌های جدید") as Block.Text).text)
         assertTrue(one("راهنما") is Block.Help)
@@ -130,12 +130,12 @@ class AssistantRepositoryTest {
         customers.create("سارا کریمی")
         customers.create("مریم کریمی")
         val b = one("فردا برای کریمی تماس") as Block.Choices
-        assertEquals("کدام مشتری؟", b.text)
+        assertEquals("کدام متقاضی؟", b.text)
         assertEquals(setOf("سارا کریمی", "مریم کریمی"), b.options.map { it.label }.toSet())
         assertTrue(b.options.all { it.say.startsWith("فردا برای ") && it.say.endsWith(" تماس") })
         // گزینه را بفرست ← این‌بار مبهم نیست
         val confirm = one(b.options.first { it.label == "سارا کریمی" }.say) as Block.Confirm
-        assertTrue(confirm.lines.contains("مشتری: سارا کریمی"))
+        assertTrue(confirm.lines.contains("متقاضی: سارا کریمی"))
     }
 
     @Test
@@ -143,7 +143,7 @@ class AssistantRepositoryTest {
         val c = customers.create("آقای رنجبر")
         val b = one("فردا برای رنجبر تحویل نقشه") as Block.Confirm
         assertEquals("این را ثبت کنم؟", b.text)
-        assertEquals(listOf("کار · فردا", "مشتری: آقای رنجبر", "«تحویل نقشه»"), b.lines)
+        assertEquals(listOf("کار · فردا", "متقاضی: آقای رنجبر", "«تحویل نقشه»"), b.lines)
         // تا تأیید نشده چیزی ثبت نشده
         assertEquals(0, tasks.observeOpenByCustomer(c).first().size)
 
@@ -163,7 +163,7 @@ class AssistantRepositoryTest {
         val b = one("هر هفته تماس با دفتر") as Block.Confirm
         assertEquals("کار · هر ۷ روز", b.lines[0].substringBefore(" · 🔁").let { "کار · هر ۷ روز" })
         assertTrue(b.lines[0].contains("🔁 هر هفته"))
-        assertEquals("بدون مشتری (صندوق ورودی)", b.lines[1])
+        assertEquals("بدون متقاضی (صندوق ورودی)", b.lines[1])
         val done = bot.confirm(b.action)
         val t = db.taskDao().get((done.undo as Undo.Task).id)!!
         assertNull(t.customerId)
@@ -196,15 +196,15 @@ class AssistantRepositoryTest {
         assertEquals(NavTarget.Tag("اداره"), (replies[1] as Block.Link).nav)
         assertEquals("برچسب #هیچ چیزی ندارد.", (bot.reply("#هیچ").single() as Block.Text).text)
 
-        assertEquals("مشتری‌ای با «ناشناس» پیدا نشد.", (one("تلفن ناشناس") as Block.Text).text)
+        assertEquals("متقاضی‌ای با «ناشناس» پیدا نشد.", (one("تلفن ناشناس") as Block.Text).text)
         assertEquals("چه کاری؟ مثلاً «فردا برای رنجبر تحویل نقشه»", (one("فردا برای رنجبر") as Block.Text).text)
 
-        // نام مشتری وسط جمله ← همان مشتری (تطبیق جزئی، مثل وب‌اپ)
+        // نام متقاضی وسط جمله ← همان متقاضی (تطبیق جزئی، مثل وب‌اپ)
         assertTrue(one("رنجبر نقشه باغ") is Block.CustomerCard)
         val search = bot.reply("نقشه باغ")
         assertTrue(search.last() is Block.Link)
         assertEquals(NavTarget.Search("نقشه باغ"), (search.last() as Block.Link).nav)
         val near = bot.reply("رنجب")
-        assertTrue(near.first() is Block.Choices) // مشتری‌های نزدیک
+        assertTrue(near.first() is Block.Choices) // متقاضی‌های نزدیک
     }
 }

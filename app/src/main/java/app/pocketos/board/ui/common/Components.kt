@@ -37,7 +37,7 @@ import app.pocketos.board.ui.theme.board
 @Composable
 fun stripeColor(id: Long): Color = MaterialTheme.board.caseStripes[(id % 6).toInt().let { if (it < 0) it + 6 else it }]
 
-/** مشتری = دایرهٔ آبی‌خاکستری با حرف اول نام (مثل وب‌اپ). [id] برای سازگاری با فراخوان‌ها نگه داشته شده. */
+/** متقاضی = دایرهٔ آبی‌خاکستری با حرف اول نام (مثل وب‌اپ). [id] برای سازگاری با فراخوان‌ها نگه داشته شده. */
 @Composable
 fun Avatar(name: String, @Suppress("UNUSED_PARAMETER") id: Long, size: Dp = 36.dp) {
     Box(
@@ -151,7 +151,7 @@ fun StripeCard(stripe: Color, modifier: Modifier = Modifier, onClick: (() -> Uni
     }
 }
 
-/** کارت مشتری: زمینهٔ آبی‌خاکستری و دورخط آبی (سربرگ مشتری و گروه‌های مشتری). */
+/** کارت متقاضی: زمینهٔ آبی‌خاکستری و دورخط آبی (سربرگ متقاضی و گروه‌های متقاضی). */
 @Composable
 fun CustomerCard(modifier: Modifier = Modifier, radius: Dp = 14.dp, onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
     val shape = RoundedCornerShape(radius)
@@ -165,7 +165,7 @@ fun CustomerCard(modifier: Modifier = Modifier, radius: Dp = 14.dp, onClick: (()
     ) { content() }
 }
 
-/** کارت سفید دورخط‌دار (مورد ثبت‌شده، ردیف مشتری). */
+/** کارت سفید دورخط‌دار (مورد ثبت‌شده، ردیف متقاضی). */
 @Composable
 fun SurfaceCard(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
     val shape = RoundedCornerShape(16.dp)
@@ -189,7 +189,7 @@ fun EmptyNote(text: String) {
     )
 }
 
-/** «‹ مشتری» بالای صفحهٔ پرونده: قرص آبی‌خاکستری با آواتار کوچک. */
+/** «‹ متقاضی» بالای صفحهٔ پرونده: قرص آبی‌خاکستری با آواتار کوچک. */
 @Composable
 fun Crumb(name: String, id: Long, onClick: () -> Unit) {
     val shape = RoundedCornerShape(99.dp)

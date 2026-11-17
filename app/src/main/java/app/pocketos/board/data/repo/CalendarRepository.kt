@@ -72,7 +72,7 @@ class CalendarRepository @Inject constructor(db: BoardDatabase) {
     fun observeVersion(): Flow<Int> = tasks.observeVersion()
 
     /**
-     * جست‌وجو در عنوان، برچسب دقیق (#اداره)، نام مشتری/پرونده و مهلت پرونده‌ها؛ حداکثر ۱۰۰ نتیجه.
+     * جست‌وجو در عنوان، برچسب دقیق (#اداره)، نام متقاضی/پرونده و مهلت پرونده‌ها؛ حداکثر ۱۰۰ نتیجه.
      * «پیش رو»: کارهای باز و هر چه از امروز به بعد است (نزدیک‌ترین اول)؛ «گذشته»: انجام‌شده‌های پیش از امروز (تازه‌ترین اول).
      */
     suspend fun search(query: String, today: LocalDate): SearchResult {

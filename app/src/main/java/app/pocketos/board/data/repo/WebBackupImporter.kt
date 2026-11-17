@@ -39,7 +39,7 @@ data class WebPreview(
     val notes: Int = 0,
     /** فایل‌هایی که پایگاه‌داده به آن‌ها اشاره دارد. */
     val files: Int = 0,
-    /** پرونده‌هایی که در وب مشتری نداشتند ← زیر مشتریِ «پرونده‌های بدون مشتری». */
+    /** پرونده‌هایی که در وب متقاضی نداشتند ← زیر متقاضیِ «پرونده‌های بدون متقاضی». */
     val orphanCases: Int = 0,
     val users: Int = 0,
     val error: String? = null,
@@ -48,7 +48,7 @@ data class WebPreview(
 /**
  * تبدیل پشتیبان وب‌اپ (Flask/SQLite: `board-data-*.zip` و `board-files-*.zip`) به ساختار این اپ.
  * شناسه‌ها حفظ می‌شود؛ زمان‌های ISO به میلی‌ثانیه؛ وضعیت‌های فارسی به کد؛ فایل‌ها با نام uuid؛
- * حذف‌های نرم همراه صاحبشان (مشتری/پرونده) طوری ثبت می‌شود که «بازگردانی» اپ درست کار کند.
+ * حذف‌های نرم همراه صاحبشان (متقاضی/پرونده) طوری ثبت می‌شود که «بازگردانی» اپ درست کار کند.
  */
 @Singleton
 class WebBackupImporter @Inject constructor(
@@ -57,7 +57,7 @@ class WebBackupImporter @Inject constructor(
     private val clock: Clock,
 ) {
     companion object {
-        const val ORPHAN_CUSTOMER = "پرونده‌های بدون مشتری"
+        const val ORPHAN_CUSTOMER = "پرونده‌های بدون متقاضی"
         private const val TEMP_DB = "web-import.db"
         const val FILES_LIST = "web-files.txt"
 
@@ -116,7 +116,7 @@ class WebBackupImporter @Inject constructor(
         val customerIds = customers.map { it.id }.toMutableSet()
         val customerDeleted = customers.associate { it.id to it.deletedAt }
 
-        // پرونده‌ی بی‌مشتری ← یک مشتریِ جایگزین (اپ هر پرونده را زیر یک مشتری می‌خواهد)
+        // پرونده‌ی بی‌متقاضی ← یک متقاضیِ جایگزین (اپ هر پرونده را زیر یک متقاضی می‌خواهد)
         var orphanId: Long? = null
         fun orphan(): Long {
             orphanId?.let { return it }
@@ -147,7 +147,7 @@ class WebBackupImporter @Inject constructor(
         val caseById = caseRows.associate { it.entity.id to it.entity }
         val caseDeleted = caseById.mapValues { it.value.deletedAt }
 
-        /** حذف نرم: همراه صاحب (پرونده/مشتری) همان زمان را می‌گیرد تا بازگردانیِ اپ محتوا را برگرداند. */
+        /** حذف نرم: همراه صاحب (پرونده/متقاضی) همان زمان را می‌گیرد تا بازگردانیِ اپ محتوا را برگرداند. */
         fun resolveDeleted(own: Long?, delCase: Long?, delCustomer: Long?): Long? {
             if (own == null) return null
             if (delCase != null) caseDeleted[delCase]?.let { return it }

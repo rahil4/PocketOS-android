@@ -26,7 +26,7 @@ import java.time.LocalDate
 import java.time.ZonedDateTime
 import javax.inject.Inject
 
-/** گروهِ مشتری با ردیف‌های همراهِ خودشان. */
+/** گروهِ متقاضی با ردیف‌های همراهِ خودشان. */
 data class HomeGroupUi(val customerId: Long?, val name: String?, val rows: List<HomeRow>)
 
 fun groupRows(rows: List<HomeRow>): List<HomeGroupUi> {

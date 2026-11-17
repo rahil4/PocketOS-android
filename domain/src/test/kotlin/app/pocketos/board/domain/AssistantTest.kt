@@ -71,7 +71,7 @@ class AssistantTest {
         assertEquals(2L, r.customerId)
         assertEquals("تماس", r.title)
         val n = f("فردا تماس با دفتر") as AssistIntent.AddTask
-        assertEquals(null, n.customerId) // مشتری نیافت ← بدون مشتری، ولی با تأیید
+        assertEquals(null, n.customerId) // متقاضی نیافت ← بدون متقاضی، ولی با تأیید
         assertEquals("تماس با دفتر", n.title)
         val tag = f("فردا تحویل #اداره") as AssistIntent.AddTask
         assertEquals("تحویل #اداره", tag.title)
@@ -89,7 +89,7 @@ class AssistantTest {
         assertEquals(setOf(3L, 4L), ch.ids.toSet())
         assertTrue("{name}" in ch.say)
         assertEquals("فردا برای {name} تماس", ch.say)
-        assertEquals("کدام مشتری؟", ch.ask)
+        assertEquals("کدام متقاضی؟", ch.ask)
         // با نام کامل دیگر مبهم نیست
         val full = f("فردا برای سارا کریمی تماس") as AssistIntent.AddTask
         assertEquals(3L, full.customerId)
@@ -124,10 +124,10 @@ class AssistantTest {
 
     @Test
     fun partialNameMatchesOnlyAfterPrepositionOrHonorific() {
-        // «ابراهیم» نام کامل نیست ولی بعد از «برای» می‌آید ← همان مشتری
+        // «ابراهیم» نام کامل نیست ولی بعد از «برای» می‌آید ← همان متقاضی
         val x = f("فردا برای ابراهیم تماس") as AssistIntent.AddTask
         assertEquals(1L, x.customerId)
-        // بدون حرف اضافه، «کریمی» وسط عنوان نام مشتری حساب نمی‌شود
+        // بدون حرف اضافه، «کریمی» وسط عنوان نام متقاضی حساب نمی‌شود
         val y = f("فردا تماس کریمی") as AssistIntent.AddTask
         assertEquals(null, y.customerId)
     }

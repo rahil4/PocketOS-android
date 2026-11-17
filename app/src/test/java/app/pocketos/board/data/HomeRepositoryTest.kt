@@ -190,7 +190,7 @@ class HomeRepositoryTest {
 
         val r = search.search("رنجبر")
         assertEquals(1, r.customers.size)
-        assertEquals(1, r.tasks.upcoming.size + r.tasks.past.size) // کارِ این مشتری؛ پرونده مهلت ندارد
+        assertEquals(1, r.tasks.upcoming.size + r.tasks.past.size) // کارِ این متقاضی؛ پرونده مهلت ندارد
         assertEquals(0, r.notes.size) // «رنجبر» در متن یادداشت نیست
         assertEquals(1, search.search("افراز").cases.size)
         assertEquals(1, search.search("سند").notes.size)

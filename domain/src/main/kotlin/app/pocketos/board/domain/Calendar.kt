@@ -125,10 +125,10 @@ object CalendarLogic {
             )
         }
 
-    /** گروه‌بندی بر اساس مشتری؛ گروه‌های دارای کار باز اول، «بدون مشتری» آخر. */
+    /** گروه‌بندی بر اساس متقاضی؛ گروه‌های دارای کار باز اول، «بدون متقاضی» آخر. */
     fun groupByCustomer(items: List<CalItem>): List<CalGroup> {
         val groups = items.groupBy { it.customerId }.map { (id, v) ->
-            CalGroup(id, v.firstNotNullOfOrNull { it.customerName } ?: "بدون مشتری", v.sortedWith(order))
+            CalGroup(id, v.firstNotNullOfOrNull { it.customerName } ?: "بدون متقاضی", v.sortedWith(order))
         }
         return groups.sortedWith(
             compareBy<CalGroup>({ it.customerId == null }, { it.openCount == 0 }).then { a, b -> Names.compare(a.name, b.name) },

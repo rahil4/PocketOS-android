@@ -105,14 +105,14 @@ object HomeLogic {
         else -> "شب بخیر"
     }
 
-    /** گروه‌بندی بر اساس مشتری به ترتیب اولین دیده‌شدن. */
+    /** گروه‌بندی بر اساس متقاضی به ترتیب اولین دیده‌شدن. */
     fun group(entries: List<HomeEntry>): List<HomeGroup> {
         val order = LinkedHashMap<Long, MutableList<HomeEntry>>()
         entries.forEach { order.getOrPut(it.customerId ?: 0L) { ArrayList() } += it }
         return order.values.map { items -> HomeGroup(items.first().customerId, items.first().customerName, items) }
     }
 
-    /** خانه: حداکثر ۴ مشتری و برای هر کدام ۳ مورد؛ تعداد مواردِ نمایش‌داده‌نشده هم برمی‌گردد. */
+    /** خانه: حداکثر ۴ متقاضی و برای هر کدام ۳ مورد؛ تعداد مواردِ نمایش‌داده‌نشده هم برمی‌گردد. */
     fun limit(groups: List<HomeGroup>, maxGroups: Int = MAX_GROUPS, maxItems: Int = MAX_ITEMS): Pair<List<HomeGroup>, Int> {
         val total = groups.sumOf { it.items.size }
         val shown = groups.take(maxGroups).map { it.copy(items = it.items.take(maxItems)) }

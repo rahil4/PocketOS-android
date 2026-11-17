@@ -31,7 +31,7 @@ fun TrashScreen(onBack: () -> Unit, vm: TrashViewModel = hiltViewModel()) {
     val st by vm.state.collectAsStateWithLifecycle()
     val now = vm.clock.millis()
     val deletedIds = st.customers.map { it.id }.toSet()
-    // پرونده‌هایی که همراه مشتری حذف شده‌اند جدا نمایش داده نمی‌شوند.
+    // پرونده‌هایی که همراه متقاضی حذف شده‌اند جدا نمایش داده نمی‌شوند.
     val cases = st.cases.filter { it.customerId !in deletedIds }
 
     LazyColumn(
@@ -43,7 +43,7 @@ fun TrashScreen(onBack: () -> Unit, vm: TrashViewModel = hiltViewModel()) {
         item { Text("سطل بازیافت", style = MaterialTheme.typography.titleLarge) }
         item { Text("هر چیز ۳۰ روز اینجا می‌ماند و بعد پاک می‌شود.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted) }
         if (st.loaded && st.customers.isEmpty() && cases.isEmpty()) item { EmptyNote("سطل خالی است.") }
-        if (st.customers.isNotEmpty()) item { SectionLabel("مشتری‌ها") }
+        if (st.customers.isNotEmpty()) item { SectionLabel("متقاضی‌ها") }
         items(st.customers, key = { "c${it.id}" }) { c ->
             TrashRow(c.name, TrashRepository.daysLeft(c.deletedAt ?: now, now)) { vm.restoreCustomer(c.id) }
         }

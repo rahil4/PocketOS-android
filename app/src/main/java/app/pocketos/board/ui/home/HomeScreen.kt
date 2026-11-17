@@ -56,13 +56,15 @@ fun HomeScreen(
     onOpenSearch: () -> Unit,
     onOpenChat: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenTree: () -> Unit,
     vm: HomeViewModel = hiltViewModel(),
     stream: StreamViewModel = hiltViewModel(),
+    tree: TreeViewModel = hiltViewModel(),
 ) {
     val st by vm.state.collectAsStateWithLifecycle()
     val overlays = rememberOverlayState()
     LaunchedEffect(Unit) { stream.bind(StreamScope.Active) }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refresh() }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refresh(); tree.refresh() }
     StreamOverlays(stream, overlays)
     // «＋ یادداشت» ویجت: پنجرهٔ یادداشت باز شود.
     val quick by vm.quickNote.collectAsStateWithLifecycle()
@@ -97,6 +99,7 @@ fun HomeScreen(
                     ) { Icon(Icons.Filled.Search, contentDescription = "جست‌وجو", tint = MaterialTheme.colorScheme.onSurface) }
                 }
             }
+            item("tree") { TreeCard(onOpenCustomer, onOpenTree, tree) }
             item("sec") {
                 Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("امروز", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted, modifier = Modifier.weight(1f))

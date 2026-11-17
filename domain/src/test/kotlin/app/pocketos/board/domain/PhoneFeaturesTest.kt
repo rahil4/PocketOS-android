@@ -120,10 +120,10 @@ class PhoneFeaturesTest {
 
     @Test
     fun morningBodyCapsAtThreeCustomersAndTwoTitles() {
-        val rows = (1..5).flatMap { c -> (1..3).map { t -> ReminderTask("کار$t", today, "مشتری$c") } }
+        val rows = (1..5).flatMap { c -> (1..3).map { t -> ReminderTask("کار$t", today, "متقاضی$c") } }
         val lines = Reminders.morning(rows, today, true)!!.body.lines()
         assertEquals(3, lines.size)
-        assertEquals("مشتری۱: کار۱ · کار۲", lines[0].replace("1", "۱"))
+        assertEquals("متقاضی۱: کار۱ · کار۲", lines[0].replace("1", "۱"))
     }
 
     @Test

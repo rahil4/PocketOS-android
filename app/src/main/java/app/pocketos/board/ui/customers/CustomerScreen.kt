@@ -71,13 +71,13 @@ fun CustomerScreen(
     var merge by rememberSaveable { mutableStateOf(false) }
     var closedOpen by rememberSaveable { mutableStateOf(false) }
 
-    // مشتری حذف یا ادغام شد ← برگرد
+    // متقاضی حذف یا ادغام شد ← برگرد
     LaunchedEffect(st.loaded, st.customer == null) { if (st.loaded && st.customer == null) onBack() }
     val c = st.customer ?: return
     LaunchedEffect(c.id) { stream.bind(StreamScope.Customer(c.id)) }
 
     if (edit) {
-        CustomerFormDialog("ویرایش مشتری", c.name, c.phone, "ذخیره", { edit = false }) { n, p -> edit = false; vm.update(n, p) }
+        CustomerFormDialog("ویرایش متقاضی", c.name, c.phone, "ذخیره", { edit = false }) { n, p -> edit = false; vm.update(n, p) }
     }
     if (newCase) {
         CaseFormDialog("پروندهٔ تازه", vm.today, "", null, "ساخت", { newCase = false }) { t, d ->
@@ -104,7 +104,7 @@ fun CustomerScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
         ) {
-            item { TextButton(onBack) { Text("‹ مشتری‌ها") } }
+            item { TextButton(onBack) { Text("‹ متقاضی‌ها") } }
             item {
                 CustomerCard(radius = 18.dp) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -131,7 +131,7 @@ fun CustomerScreen(
                                 { Text(if (c.pinnedAt != null) "برداشتن ستاره" else "★ ستاره‌دار کردن") },
                                 { menu = false; vm.setStar(c.pinnedAt == null) },
                             )
-                            DropdownMenuItem({ Text("ادغام با مشتری دیگر…") }, { menu = false; merge = true })
+                            DropdownMenuItem({ Text("ادغام با متقاضی دیگر…") }, { menu = false; merge = true })
                             DropdownMenuItem(
                                 { Text(if (c.archivedAt != null) "برگرداندن از بایگانی" else "بایگانی") },
                                 { menu = false; vm.setArchived(c.archivedAt == null) },
@@ -141,7 +141,7 @@ fun CustomerScreen(
                     }
                 }
             }
-            // کارهای بدون پرونده: مستقیم زیر مشتری
+            // کارهای بدون پرونده: مستقیم زیر متقاضی
             val rootTasks = tasksByCase[null].orEmpty()
             if (rootTasks.isNotEmpty()) {
                 item { SectionLabel("کارها") }

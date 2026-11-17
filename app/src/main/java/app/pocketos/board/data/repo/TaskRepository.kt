@@ -128,7 +128,7 @@ class TaskRepository @Inject constructor(
         itemRepo.touch(t, clock.millis())
     }
 
-    /** تبدیل یادداشت به کار با همان مشتری/پرونده؛ یادداشت نرم حذف می‌شود. */
+    /** تبدیل یادداشت به کار با همان متقاضی/پرونده؛ یادداشت نرم حذف می‌شود. */
     suspend fun fromNote(itemId: Long, title: String, due: LocalDate?, repeat: String?): Long = db.withTransaction {
         val item = items.get(itemId) ?: error("یادداشت پیدا نشد")
         val id = create(Target(item.customerId, item.caseId), title, due, repeat)

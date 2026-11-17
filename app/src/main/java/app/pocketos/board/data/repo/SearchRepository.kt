@@ -19,7 +19,7 @@ data class GlobalResults(
     val count: Int get() = customers.size + cases.size + tasks.upcoming.size + tasks.past.size + notes.size
 }
 
-/** جست‌وجوی سراسری: مشتری، پرونده، کار و متن یادداشت‌ها. */
+/** جست‌وجوی سراسری: متقاضی، پرونده، کار و متن یادداشت‌ها. */
 @Singleton
 class SearchRepository @Inject constructor(
     private val db: BoardDatabase,

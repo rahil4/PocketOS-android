@@ -51,6 +51,12 @@ fun NoteDialog(vm: StreamViewModel, onDismiss: () -> Unit) {
     val label by vm.targetLabel.collectAsStateWithLifecycle()
     val allTags by produceState(emptyList<String>()) { value = vm.tagSuggestions() }
     val cap = remember(text) { When.analyze(text, vm.today) }
+    val tgt by vm.target.collectAsStateWithLifecycle()
+    var chosen by rememberSaveable { mutableStateOf<Long?>(null) }
+    // فقط پیشنهاد: در صندوق، متقاضی‌های همنام متن (و برای کار زماندار، اخیرها) نشان داده می‌شود.
+    val sugg by produceState(emptyList<app.pocketos.board.data.db.CustomerEntity>(), text, tgt, cap != null) {
+        value = if (tgt.isInbox) vm.customerSuggestions(text, withRecent = cap != null) else emptyList()
+    }
     val prefix = TAG_AT_END.find(text)?.groupValues?.get(1)
     val suggestions = if (prefix == null) emptyList() else allTags.filter { it.startsWith(Normalize.key(prefix)) && it != Normalize.key(prefix) }.take(6)
 
@@ -74,9 +80,18 @@ fun NoteDialog(vm: StreamViewModel, onDismiss: () -> Unit) {
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary,
                     )
                 }
+                if (sugg.isNotEmpty()) {
+                    Text(
+                        if (cap != null) "این کار برای کدام متقاضی است؟ (پیشنهاد؛ می‌توانی بی‌متقاضی هم ثبت کنی)" else "برای کدام متقاضی است؟ (پیشنهاد)",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted,
+                    )
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        sugg.forEach { c -> Chip(c.name, selected = chosen == c.id) { chosen = if (chosen == c.id) null else c.id } }
+                    }
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (cap != null) Pill("ثبت کار برای ${DayLabel.of(cap.due, vm.today)}", primary = true) { vm.saveTaskFromText(text); onDismiss() }
-                    Pill("ثبت یادداشت", primary = cap == null) { vm.saveNote(text); onDismiss() }
+                    if (cap != null) Pill("ثبت کار برای ${DayLabel.of(cap.due, vm.today)}", primary = true) { vm.saveTaskFromText(text, chosen); onDismiss() }
+                    Pill("ثبت یادداشت", primary = cap == null) { vm.saveNote(text, chosen); onDismiss() }
                 }
             }
         },
@@ -205,7 +220,7 @@ fun EditNoteDialog(vm: StreamViewModel, item: ItemEntity, onDismiss: () -> Unit)
     )
 }
 
-/** «ثبت در» و «انتقال به»: صندوق ورودی، ۶ پروندهٔ اخیر، یا هر مشتری. */
+/** «ثبت در» و «انتقال به»: صندوق ورودی، ۶ پروندهٔ اخیر، یا هر متقاضی. */
 @Composable
 fun TargetPickerDialog(vm: StreamViewModel, title: String, onDismiss: () -> Unit, onPick: (Target) -> Unit) {
     val recent by vm.recentCases.collectAsStateWithLifecycle()
@@ -218,7 +233,7 @@ fun TargetPickerDialog(vm: StreamViewModel, title: String, onDismiss: () -> Unit
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                OutlinedTextField(q, { q = it }, singleLine = true, label = { Text("جست‌وجوی مشتری") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(q, { q = it }, singleLine = true, label = { Text("جست‌وجوی متقاضی") }, modifier = Modifier.fillMaxWidth())
                 LazyColumn(Modifier.heightIn(max = 340.dp)) {
                     if (q.isBlank()) {
                         item("inbox") { PickRow("صندوق ورودی", null) { onPick(Target.Inbox) } }

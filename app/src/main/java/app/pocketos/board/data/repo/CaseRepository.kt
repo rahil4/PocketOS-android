@@ -54,7 +54,7 @@ class CaseRepository @Inject constructor(private val db: BoardDatabase, private 
         customers.touch(c.customerId, now)
     }
 
-    /** پرونده با یادداشت و کارهایش به مشتری دیگر می‌رود. */
+    /** پرونده با یادداشت و کارهایش به متقاضی دیگر می‌رود. */
     suspend fun moveTo(id: Long, customerId: Long) = db.withTransaction {
         val c = cases.get(id) ?: return@withTransaction
         if (c.customerId == customerId) return@withTransaction
@@ -78,7 +78,7 @@ class CaseRepository @Inject constructor(private val db: BoardDatabase, private 
         cases.setDeleted(id, null)
         bulk.restoreItemsOfCase(id, ts)
         bulk.restoreTasksOfCase(id, ts)
-        // اگر صاحبش در سطل است، خودِ مشتری هم برمی‌گردد (نه محتوای دیگرش).
+        // اگر صاحبش در سطل است، خودِ متقاضی هم برمی‌گردد (نه محتوای دیگرش).
         val owner = customers.get(c.customerId)
         if (owner?.deletedAt != null) customers.setDeleted(owner.id, null)
         customers.touch(c.customerId, clock.millis())

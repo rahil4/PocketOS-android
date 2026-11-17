@@ -100,14 +100,14 @@ class BackupService @Inject constructor(
                 },
             ),
             "cases.csv" to Csv.encode(
-                listOf("شناسه", "مشتری", "عنوان", "وضعیت", "مهلت"),
+                listOf("شناسه", "متقاضی", "عنوان", "وضعیت", "مهلت"),
                 rows(
                     "SELECT k.id, c.name, k.title, k.status, k.dueDay FROM cases k LEFT JOIN customers c ON c.id = k.customerId " +
                         "WHERE k.deletedAt IS NULL ORDER BY k.id",
                 ) { listOf(it.str(0), it.str(1), it.str(2), CaseStatus.of(it.str(3)).label, it.str(4)) },
             ),
             "tasks.csv" to Csv.encode(
-                listOf("شناسه", "مشتری", "پرونده", "عنوان", "روز", "انجام‌شده", "تکرار"),
+                listOf("شناسه", "متقاضی", "پرونده", "عنوان", "روز", "انجام‌شده", "تکرار"),
                 rows(
                     "SELECT t.id, c.name, k.title, t.title, t.dueDay, t.doneAt, t.repeat FROM tasks t " +
                         "LEFT JOIN customers c ON c.id = t.customerId LEFT JOIN cases k ON k.id = t.caseId " +
@@ -117,7 +117,7 @@ class BackupService @Inject constructor(
                 },
             ),
             "notes.csv" to Csv.encode(
-                listOf("شناسه", "مشتری", "پرونده", "نوع", "متن", "نام فایل", "زمان"),
+                listOf("شناسه", "متقاضی", "پرونده", "نوع", "متن", "نام فایل", "زمان"),
                 rows(
                     "SELECT i.id, c.name, k.title, i.kind, i.text, i.fileName, i.createdAt FROM items i " +
                         "LEFT JOIN customers c ON c.id = i.customerId LEFT JOIN cases k ON k.id = i.caseId " +

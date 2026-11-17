@@ -437,7 +437,7 @@ private fun ResultDay(d: LocalDate, list: List<CalEntry>, today: LocalDate, stre
 
 // ───────────────────────── ردیف ─────────────────────────
 
-/** نام مشتری و پرونده: کم‌رنگ با خط‌زیر نقطه‌چین (لینک)، مثل وب‌اپ. */
+/** نام متقاضی و پرونده: کم‌رنگ با خط‌زیر نقطه‌چین (لینک)، مثل وب‌اپ. */
 @Composable
 private fun DottedLink(text: String, onClick: () -> Unit) {
     val color = MaterialTheme.board.muted

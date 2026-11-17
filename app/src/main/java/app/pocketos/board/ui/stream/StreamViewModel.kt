@@ -20,6 +20,7 @@ import app.pocketos.board.data.repo.Target
 import app.pocketos.board.data.repo.TaskRepository
 import app.pocketos.board.domain.CaseStatus
 import app.pocketos.board.domain.DayLabel
+import app.pocketos.board.domain.Names
 import app.pocketos.board.domain.Tags
 import app.pocketos.board.domain.When
 import app.pocketos.board.ui.UiMessenger
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -80,6 +82,11 @@ class StreamViewModel @Inject constructor(
     private val scope = MutableStateFlow<StreamScope?>(null)
     private val kind = MutableStateFlow<String?>(null)
     private val limit = MutableStateFlow(PAGE)
+
+    /** متقاضی‌های فعال (برای پیشنهاد نام در یادداشت‌های صندوق). */
+    val activeCustomers: StateFlow<List<CustomerEntity>> =
+        customerRepo.observeActive().map { l -> l.filter { it.archivedAt == null } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /** مقصد ثبت؛ پیش‌فرض خودِ صفحه، با «ثبت در» عوض می‌شود. */
     val target = MutableStateFlow(Target.Inbox)
@@ -136,9 +143,9 @@ class StreamViewModel @Inject constructor(
         when {
             t.caseId != null -> caseRepo.observe(t.caseId).flatMapLatest { c ->
                 if (c == null) flowOf("صندوق ورودی")
-                else customerRepo.observe(c.customerId).map { cu -> (cu?.name ?: "مشتری") + " › " + c.title }
+                else customerRepo.observe(c.customerId).map { cu -> (cu?.name ?: "متقاضی") + " › " + c.title }
             }
-            t.customerId != null -> customerRepo.observe(t.customerId).map { it?.name ?: "مشتری" }
+            t.customerId != null -> customerRepo.observe(t.customerId).map { it?.name ?: "متقاضی" }
             else -> flowOf("صندوق ورودی")
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "…")
@@ -156,16 +163,29 @@ class StreamViewModel @Inject constructor(
     // ── ثبت ──
     private fun added(id: Long) = ui.show("ثبت شد", "بازگردانی") { itemRepo.delete(id) }
 
-    fun saveNote(text: String) {
+    /** متقاضیِ پیشنهادی برای ثبت از صندوق: نام‌های داخل متن اول؛ با [withRecent] اخیرها هم می‌آیند (حداکثر ۶). */
+    suspend fun customerSuggestions(text: String, withRecent: Boolean): List<CustomerEntity> {
+        val all = customerRepo.observeActive().first().filter { it.archivedAt == null }
+        val byId = all.associateBy { it.id }
+        val named = Names.matching(text, all.map { it.id to it.name }).mapNotNull { byId[it] }
+        val rest = if (withRecent) all.filter { c -> named.none { it.id == c.id } } else emptyList()
+        return (named + rest).take(6)
+    }
+
+    /** مقصد ثبت: اگر در صندوق هستیم و متقاضی پیشنهادی انتخاب شده، همان؛ وگرنه مقصد فعلی. */
+    private fun dest(customerId: Long?): Target =
+        if (customerId != null && target.value.isInbox) Target(customerId, null) else target.value
+
+    fun saveNote(text: String, customerId: Long? = null) {
         if (text.isBlank()) return
-        viewModelScope.launch { added(itemRepo.add(target.value, ItemKind.TEXT, text)) }
+        viewModelScope.launch { added(itemRepo.add(dest(customerId), ItemKind.TEXT, text)) }
     }
 
     /** متنِ دارای روز ← کار (با تکرار اگر در متن بود). */
-    fun saveTaskFromText(text: String) {
+    fun saveTaskFromText(text: String, customerId: Long? = null) {
         val cap = When.analyze(text, today) ?: return
         viewModelScope.launch {
-            val id = taskRepo.create(target.value, cap.title, cap.due, cap.repeat)
+            val id = taskRepo.create(dest(customerId), cap.title, cap.due, cap.repeat)
             ui.show("کار برای ${DayLabel.of(cap.due, today)} ثبت شد", "بازگردانی") { taskRepo.delete(id) }
         }
     }

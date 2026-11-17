@@ -80,8 +80,8 @@ class AssistantRepository @Inject constructor(
         }
         AssistIntent.WhoHasTasks -> {
             val rows = taskDao.openCountsByCustomer(12)
-            if (rows.isEmpty()) listOf(Block.Text("هیچ مشتری‌ای کار باز ندارد ✓"))
-            else listOf(Block.Items("مشتری‌هایی که کار دارند", rows.map { ListItem(it.name, Digits.fa("${it.n} کار"), NavTarget.Customer(it.id)) }))
+            if (rows.isEmpty()) listOf(Block.Text("هیچ متقاضی‌ای کار باز ندارد ✓"))
+            else listOf(Block.Items("متقاضی‌هایی که کار دارند", rows.map { ListItem(it.name, Digits.fa("${it.n} کار"), NavTarget.Customer(it.id)) }))
         }
         AssistIntent.OpenCases -> {
             val rows = db.caseDao().openBrief(12)
@@ -109,17 +109,17 @@ class AssistantRepository @Inject constructor(
             val tpl = intent.say
             val opts = intent.ids.mapNotNull { id -> db.customerDao().get(id)?.takeIf { it.deletedAt == null } }
                 .map { Block.Choices.Option(it.name, tpl.replace("{name}", it.name)) }
-            listOf(Block.Choices(intent.ask ?: "کدام مشتری؟", opts))
+            listOf(Block.Choices(intent.ask ?: "کدام متقاضی؟", opts))
         }
         is AssistIntent.Tag -> tagBlocks(intent.tag, today)
-        is AssistIntent.NoCustomer -> listOf(Block.Text("مشتری‌ای با «${intent.q}» پیدا نشد."))
+        is AssistIntent.NoCustomer -> listOf(Block.Text("متقاضی‌ای با «${intent.q}» پیدا نشد."))
         AssistIntent.NeedTitle -> listOf(Block.Text("چه کاری؟ مثلاً «فردا برای رنجبر تحویل نقشه»"))
         is AssistIntent.AddTask -> listOf(
             Block.Confirm(
                 "این را ثبت کنم؟",
                 listOf(
                     "کار · ${intent.label}" + (intent.repeat?.let { " · 🔁 ${When.repeatLabel(it)}" } ?: ""),
-                    intent.customer?.let { "مشتری: $it" } ?: "بدون مشتری (صندوق ورودی)",
+                    intent.customer?.let { "متقاضی: $it" } ?: "بدون متقاضی (صندوق ورودی)",
                     "«${intent.title}»",
                 ),
                 ConfirmAction.Task(intent.customerId, intent.title, intent.due, intent.repeat),
@@ -128,7 +128,7 @@ class AssistantRepository @Inject constructor(
         is AssistIntent.AddNote -> listOf(
             Block.Confirm(
                 "این یادداشت را ثبت کنم؟",
-                listOf("مشتری: ${intent.customer}", "«${intent.text.take(300)}»"),
+                listOf("متقاضی: ${intent.customer}", "«${intent.text.take(300)}»"),
                 ConfirmAction.Note(intent.customerId, intent.text.take(5000)),
             ),
         )
@@ -136,14 +136,14 @@ class AssistantRepository @Inject constructor(
             val key = Normalize.key(intent.q)
             val near = if (key.length >= 2) db.customerDao().allActive().filter { key in it.searchText }.sortedByDescending { it.lastActivity }.take(6) else emptyList()
             buildList {
-                if (near.isNotEmpty()) add(Block.Choices("مشتری‌های نزدیک:", near.map { Block.Choices.Option(it.name, it.name) }))
+                if (near.isNotEmpty()) add(Block.Choices("متقاضی‌های نزدیک:", near.map { Block.Choices.Option(it.name, it.name) }))
                 add(Block.Link("جست‌وجوی «${intent.q}» در یادداشت‌ها و کارها ←", NavTarget.Search(intent.q)))
             }
         }
     }
 
     private suspend fun customerBlock(id: Long, phoneOnly: Boolean): List<Block> {
-        val c = db.customerDao().get(id)?.takeIf { it.deletedAt == null } ?: return listOf(Block.Text("مشتری پیدا نشد."))
+        val c = db.customerDao().get(id)?.takeIf { it.deletedAt == null } ?: return listOf(Block.Text("متقاضی پیدا نشد."))
         if (phoneOnly) {
             if (c.phone.isBlank()) return listOf(Block.Text("برای «${c.name}» شماره‌ای ثبت نشده."))
             return listOf(Block.CustomerCard(c.name, c.phone, "", c.id))

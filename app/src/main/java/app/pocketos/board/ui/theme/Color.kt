@@ -22,7 +22,7 @@ data class BoardColors(
     val accentSoft: Color,
     val accentInk: Color,
     val line: Color,
-    /** مشتری: آواتار، نوار گروه و سربرگ. */
+    /** متقاضی: آواتار، نوار گروه و سربرگ. */
     val cu: Color,
     val cuBg: Color,
     val cuLine: Color,

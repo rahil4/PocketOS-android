@@ -136,7 +136,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenTrash: () -> Unit, vm: SettingsView
                         s.morningHour.toString(),
                     ) { c -> vm.update { it.copy(morningHour = c.toInt()) } }
                     CheckRow("یادآوری «روز را ببند» در عصر (ساعتش همان «بستن روز» بالاست)", s.eveningPush) { c -> vm.update { it.copy(eveningPush = c) } }
-                    CheckRow("نام مشتری و عنوان کارها در اعلان نمایش داده شود", s.pushNames) { c -> vm.update { it.copy(pushNames = c) } }
+                    CheckRow("نام متقاضی و عنوان کارها در اعلان نمایش داده شود", s.pushNames) { c -> vm.update { it.copy(pushNames = c) } }
                     Pill("ارسال اعلان آزمایشی") { vm.sendTest() }
                     Text(
                         "اگر اعلانی نیامد: مجوز اعلان و «بهینه‌سازی باتری» را برای برنامه بررسی کنید. اعلان‌ها حدود ۱۵ تا ۳۰ دقیقه تأخیر دارند.",
@@ -234,7 +234,7 @@ private fun RestoreDialog(p: app.pocketos.board.data.repo.RestorePreview, onConf
                     app.pocketos.board.data.repo.RestoreKind.INVALID -> Text(p.error ?: "فایل معتبر نیست.")
                     app.pocketos.board.data.repo.RestoreKind.DATA -> {
                         p.createdAt?.let { Text(Digits.fa(app.pocketos.board.domain.Jalali.formatLong(java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate())), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted) }
-                        Text(Digits.fa("${p.customers} مشتری · ${p.cases} پرونده · ${p.tasks} کار · ${p.notes} یادداشت"))
+                        Text(Digits.fa("${p.customers} متقاضی · ${p.cases} پرونده · ${p.tasks} کار · ${p.notes} یادداشت"))
                         Text(
                             "داده‌های فعلی این گوشی با این نسخه جایگزین می‌شود و برنامه دوباره باز می‌شود. یک نسخهٔ پیش از بازیابی در حافظهٔ خود اپ نگه داشته می‌شود.",
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.amber,
@@ -266,9 +266,9 @@ private fun WebImportDialog(w: app.pocketos.board.data.repo.WebPreview, filesInf
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (bad) Text(w.error ?: "")
                 else {
-                    Text(Digits.fa("${w.customers} مشتری · ${w.cases} پرونده · ${w.tasks} کار · ${w.notes} یادداشت"))
+                    Text(Digits.fa("${w.customers} متقاضی · ${w.cases} پرونده · ${w.tasks} کار · ${w.notes} یادداشت"))
                     if (w.orphanCases > 0) {
-                        Text(Digits.fa("${w.orphanCases} پرونده در وب‌اپ مشتری نداشت؛ زیر مشتریِ «پرونده‌های بدون مشتری» می‌آید."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
+                        Text(Digits.fa("${w.orphanCases} پرونده در وب‌اپ متقاضی نداشت؛ زیر متقاضیِ «پرونده‌های بدون متقاضی» می‌آید."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
                     }
                     if (w.users > 1) {
                         Text(Digits.fa("پشتیبان ${w.users} کاربر دارد؛ داده‌ی همه یک‌جا وارد می‌شود و تنظیمات از کاربر اول است."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)

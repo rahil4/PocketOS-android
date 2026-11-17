@@ -37,7 +37,7 @@ data class CaseEntity(
     val deletedAt: Long? = null,
 )
 
-/** یادداشت، عکس، صدا، فایل، موقعیت، رویداد. بدون مشتری و پرونده = صندوق ورودی. */
+/** یادداشت، عکس، صدا، فایل، موقعیت، رویداد. بدون متقاضی و پرونده = صندوق ورودی. */
 @Entity(
     tableName = "items",
     indices = [Index("customerId"), Index("caseId"), Index("deletedAt"), Index("clientId", unique = true)],
@@ -80,7 +80,7 @@ data class TaskEntity(
     val deletedAt: Long? = null,
 )
 
-/** جفت مشتری‌هایی که کاربر گفته «جدا هستند» (a < b). */
+/** جفت متقاضی‌هایی که کاربر گفته «جدا هستند» (a < b). */
 @Entity(tableName = "similar_no", primaryKeys = ["a", "b"])
 data class SimilarNoEntity(val a: Long, val b: Long)
 

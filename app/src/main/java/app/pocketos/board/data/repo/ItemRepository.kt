@@ -42,7 +42,7 @@ class ItemRepository @Inject constructor(
 
     fun observeInboxCount(): Flow<Int> = items.observeInboxCount()
 
-    /** پرونده مشتری را تعیین می‌کند: caseId پر ⇒ customerId همان مشتریِ پرونده. */
+    /** پرونده متقاضی را تعیین می‌کند: caseId پر ⇒ customerId همان متقاضیِ پرونده. */
     internal suspend fun resolve(target: Target): Target {
         val caseId = target.caseId ?: return target
         val c = cases.get(caseId) ?: return Target(target.customerId, null)

@@ -80,7 +80,7 @@ fun CustomersScreen(
 
     if (showNew) {
         CustomerFormDialog(
-            title = "مشتری تازه", initialName = newName, initialPhone = "", confirmLabel = "ساخت",
+            title = "متقاضی تازه", initialName = newName, initialPhone = "", confirmLabel = "ساخت",
             onDismiss = { showNew = false }, contactPicker = true,
             onConfirm = { n, p ->
                 showNew = false
@@ -92,10 +92,10 @@ fun CustomersScreen(
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("مشتری‌ها", style = MaterialTheme.typography.titleLarge)
+                Text("متقاضی‌ها", style = MaterialTheme.typography.titleLarge)
                 if (st.loaded) {
                     Text(
-                        Digits.fa("${st.total} مشتری · ${st.withTasks} کار دارند"),
+                        Digits.fa("${st.total} متقاضی · ${st.withTasks} کار دارند"),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted,
                     )
                 }
@@ -123,7 +123,7 @@ fun CustomersScreen(
                 if (!st.exactMatch && q.isNotBlank()) {
                     item("create") {
                         Text(
-                            "＋ ساخت مشتری «${q.trim()}»",
+                            "＋ ساخت متقاضی «${q.trim()}»",
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
@@ -149,7 +149,7 @@ fun CustomersScreen(
                         }
                     }
                 }
-                // مرتب‌سازی: شبیه هم‌اند / مشتری خالی
+                // مرتب‌سازی: شبیه هم‌اند / متقاضی خالی
                 st.similar?.let { (a, b) ->
                     item("similar") {
                         Column(
@@ -171,7 +171,7 @@ fun CustomersScreen(
                             Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.board.amberSoft).padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            Text(Digits.fa("${st.empties.size} مشتری خالی"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.board.amber)
+                            Text(Digits.fa("${st.empties.size} متقاضی خالی"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.board.amber)
                             Text("بدون پرونده، یادداشت و کار", style = MaterialTheme.typography.bodySmall)
                             Pill("بایگانی همه") { vm.archiveAll(st.empties.map { it.id }) }
                         }
@@ -180,7 +180,7 @@ fun CustomersScreen(
                 if (st.loaded && st.total == 0 && sec.archived.isEmpty()) {
                     item("empty") {
                         Text(
-                            "هنوز مشتری‌ای ثبت نشده. با «＋ جدید» اولین مشتری را بساز.",
+                            "هنوز متقاضی‌ای ثبت نشده. با «＋ جدید» اولین متقاضی را بساز.",
                             color = MaterialTheme.board.muted,
                             modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                         )

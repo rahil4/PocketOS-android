@@ -39,7 +39,7 @@ class CustomerViewModel @Inject constructor(
         CustomerUi(loaded = true, customer = c, cases = cases)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CustomerUi())
 
-    /** سایر مشتری‌ها برای ادغام. */
+    /** سایر متقاضی‌ها برای ادغام. */
     val others = repo.observeActive().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun update(name: String, phone: String) {

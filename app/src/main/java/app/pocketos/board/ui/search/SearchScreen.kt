@@ -35,7 +35,7 @@ import app.pocketos.board.ui.common.SurfaceCard
 import app.pocketos.board.ui.theme.board
 import java.time.LocalDate
 
-/** جست‌وجوی سراسری: مشتری، پرونده، کار و متن یادداشت‌ها. `#برچسب` صفحهٔ برچسب را باز می‌کند. */
+/** جست‌وجوی سراسری: متقاضی، پرونده، کار و متن یادداشت‌ها. `#برچسب` صفحهٔ برچسب را باز می‌کند. */
 @Composable
 fun SearchScreen(
     onBack: () -> Unit,
@@ -78,7 +78,7 @@ fun SearchScreen(
         if (res.count == 0) item("none") { EmptyNote("چیزی پیدا نشد") }
 
         if (res.customers.isNotEmpty()) {
-            item("hc") { SectionLabel("مشتری‌ها") }
+            item("hc") { SectionLabel("متقاضی‌ها") }
             items(res.customers, key = { "c${it.id}" }) { c ->
                 ResultRow(onClick = { onOpenCustomer(c.id) }, lead = { Avatar(c.name, c.id, 34.dp) }) {
                     Text(c.name, style = MaterialTheme.typography.titleMedium)

@@ -25,7 +25,7 @@ class CustomerRepository @Inject constructor(private val db: BoardDatabase, priv
     private val cases = db.caseDao()
     private val bulk = db.bulkDao()
 
-    /** فهرست مشتری‌ها با شمارش‌ها و حداکثر دو پروندهٔ بازِ هر مشتری. */
+    /** فهرست متقاضی‌ها با شمارش‌ها و حداکثر دو پروندهٔ بازِ هر متقاضی. */
     fun observeSummaries(): Flow<List<CustomerSummary>> =
         combine(customers.observeRows(), cases.observeOpen()) { rows, open ->
             val byCustomer = open.groupBy { it.customerId }
@@ -36,13 +36,13 @@ class CustomerRepository @Inject constructor(private val db: BoardDatabase, priv
 
     suspend fun get(id: Long): CustomerEntity? = customers.get(id)
 
-    /** مشتری‌های فعال برای انتخاب‌گرها (ادغام، انتقال). */
+    /** متقاضی‌های فعال برای انتخاب‌گرها (ادغام، انتقال). */
     fun observeActive(): Flow<List<CustomerEntity>> = customers.observeActive()
 
     fun observeNotSimilar(): Flow<Set<Pair<Long, Long>>> =
         customers.observeNotSimilar().map { l -> l.map { it.a to it.b }.toSet() }
 
-    /** مشتری تازه؛ اگر همنام باشد (حتی بایگانی‌شده) همان برمی‌گردد، بایگانی برداشته می‌شود و تلفنِ خالی پر می‌شود. */
+    /** متقاضی تازه؛ اگر همنام باشد (حتی بایگانی‌شده) همان برمی‌گردد، بایگانی برداشته می‌شود و تلفنِ خالی پر می‌شود. */
     suspend fun create(name: String, phone: String = ""): Long = db.withTransaction {
         val clean = Normalize.clean(name)
         require(clean.isNotEmpty()) { "نام خالی است" }
@@ -88,7 +88,7 @@ class CustomerRepository @Inject constructor(private val db: BoardDatabase, priv
         ts
     }
 
-    /** فقط محتوایی برمی‌گردد که همراه همین مشتری حذف شده بود. */
+    /** فقط محتوایی برمی‌گردد که همراه همین متقاضی حذف شده بود. */
     suspend fun restore(id: Long) = db.withTransaction {
         val ts = customers.get(id)?.deletedAt ?: return@withTransaction
         customers.setDeleted(id, null)

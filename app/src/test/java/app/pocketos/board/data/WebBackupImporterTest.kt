@@ -65,7 +65,7 @@ private val WEB_DATA = listOf(
     "INSERT INTO cases(id,code,title,client,status,due,created,last_activity,deleted_at,customer_id,del_customer) VALUES" +
         "(10,'A-12','افراز زمین','','در حال انجام','2026-11-20','2026-04-01T00:00:00Z','2026-11-09T00:00:00Z',NULL,1,NULL)," +
         "(11,'','پرونده یتیم','','جدید',NULL,'2026-04-01T00:00:00Z','2026-11-09T00:00:00Z',NULL,NULL,NULL)," +
-        "(12,'','پروندهٔ مشتری حذف‌شده','','جدید',NULL,'2026-04-01T00:00:00Z','2026-11-09T00:00:00Z','2026-11-12T10:00:00Z',3,3)," +
+        "(12,'','پروندهٔ متقاضی حذف‌شده','','جدید',NULL,'2026-04-01T00:00:00Z','2026-11-09T00:00:00Z','2026-11-12T10:00:00Z',3,3)," +
         "(13,'','منتظر','','در انتظار',NULL,'2026-04-01T00:00:00Z','2026-11-09T00:00:00Z',NULL,1,NULL)," +
         "(14,'','تمام','','نهایی',NULL,'2026-04-01T00:00:00Z','2026-11-09T00:00:00Z',NULL,1,NULL)",
     "INSERT INTO items(id,client_id,user_id,case_id,kind,text,file_name,file_mime,file_path,lat,lon,created,deleted_at,del_customer,customer_id) VALUES" +
@@ -81,7 +81,7 @@ private val WEB_DATA = listOf(
         "(200,NULL,10,1,'ارسال نامه #اداره','2026-11-14','2026-11-14T09:00:00Z','2026-11-01T00:00:00Z',NULL,NULL,1,NULL,NULL,NULL)," +
         "(201,NULL,NULL,1,'تماس','2026-11-16',NULL,'2026-11-14T09:00:00Z',NULL,NULL,1,'weekly',200,'2026-11-15')," +
         "(202,NULL,NULL,1,'کار حذف‌شده','2026-11-16',NULL,'2026-11-01T00:00:00Z','2026-11-12T10:00:00Z',3,3,NULL,NULL,NULL)," +
-        "(203,NULL,10,1,'بدون مشتری مستقیم','2026-11-17',NULL,'2026-11-01T00:00:00Z',NULL,NULL,NULL,NULL,NULL,NULL)",
+        "(203,NULL,10,1,'بدون متقاضی مستقیم','2026-11-17',NULL,'2026-11-01T00:00:00Z',NULL,NULL,NULL,NULL,NULL,NULL)",
     "INSERT INTO prefs(user_id,evening_hour,theme,fsize,morning_on,morning_hour,evening_push,push_names,backup_remind) VALUES(1,20,'dark','lg',0,7,1,0,0),(2,18,'light','sm',1,9,0,1,1)",
     "INSERT INTO state(user_id,active_case_id,active_customer_id) VALUES(1,10,NULL)",
     "INSERT INTO similar_no VALUES(2,1),(1,99)",
@@ -120,7 +120,7 @@ class WebBackupImporterTest {
     @Test
     fun convertsCustomersCasesTasksItemsAndPrefs() = runBlocking {
         val preview = importer.convert(webDb(), target)
-        assertEquals(3, preview.customers) // رنجبر، کریمی و مشتریِ جایگزینِ پرونده‌ی یتیم
+        assertEquals(3, preview.customers) // رنجبر، کریمی و متقاضیِ جایگزینِ پرونده‌ی یتیم
         assertEquals(4, preview.cases)
         assertEquals(3, preview.tasks)
         assertEquals(6, preview.notes) // رویداد و حذف‌شده نمی‌شمارد
@@ -202,7 +202,7 @@ class WebBackupImporterTest {
         assertEquals(deletedAt, target.itemDao().get(105)!!.deletedAt)
         assertEquals(deletedAt, target.taskDao().get(202)!!.deletedAt)
 
-        // «بازگردانی» مشتری در اپ، محتوایی را که همراهش حذف شده بود برمی‌گرداند
+        // «بازگردانی» متقاضی در اپ، محتوایی را که همراهش حذف شده بود برمی‌گرداند
         CustomerRepository(target, clock).restore(3)
         assertNull(target.caseDao().get(12)!!.deletedAt)
         assertNull(target.itemDao().get(105)!!.deletedAt)

@@ -62,7 +62,7 @@ object Reminders {
         var body = GENERIC_BODY
         if (names) {
             val groups = LinkedHashMap<String, MutableList<String>>()
-            rows.filter { it.due == today }.forEach { groups.getOrPut(it.customer ?: "بدون مشتری") { ArrayList() } += Tags.strip(it.title).ifEmpty { it.title } }
+            rows.filter { it.due == today }.forEach { groups.getOrPut(it.customer ?: "بدون متقاضی") { ArrayList() } += Tags.strip(it.title).ifEmpty { it.title } }
             val lines = groups.entries.take(3).map { (k, v) -> "$k: " + v.take(2).joinToString(" · ") }
             if (lines.isNotEmpty()) body = lines.joinToString("\n")
         }

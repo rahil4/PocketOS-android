@@ -33,6 +33,15 @@ object Names {
     fun sortName(name: String?): String =
         Normalize.words(name).filter { it !in HONORIFICS }.joinToString(" ")
 
+    /** متقاضی‌هایی که واژهٔ نامشان (حداقل ۳ حرف) در متن آمده؛ بیشترین واژهٔ مشترک اول. */
+    fun matching(text: String, names: List<Pair<Long, String>>): List<Long> {
+        val words = Normalize.words(text).toSet()
+        return names.mapNotNull { (id, n) ->
+            val hit = tokens(n).count { it.length >= 3 && it in words }
+            if (hit > 0) id to hit else null
+        }.sortedByDescending { it.second }.map { it.first }
+    }
+
     private val collator: Collator by lazy { Collator.getInstance(Locale("fa")) }
 
     fun compare(a: String, b: String): Int = collator.compare(sortName(a), sortName(b))
@@ -70,7 +79,7 @@ object DayLabel {
 
 data class CaseChip(val id: Long, val title: String)
 
-/** خلاصهٔ یک مشتری برای فهرست. */
+/** خلاصهٔ یک متقاضی برای فهرست. */
 data class CustomerSummary(
     val id: Long,
     val name: String,
@@ -129,14 +138,14 @@ object CustomerList {
         )
     }
 
-    /** مشتری خالی: بدون پرونده/یادداشت/کار، قدیمی‌تر از یک روز، نه ستاره‌دار، نه بایگانی. */
+    /** متقاضی خالی: بدون پرونده/یادداشت/کار، قدیمی‌تر از یک روز، نه ستاره‌دار، نه بایگانی. */
     fun empties(all: List<CustomerSummary>, nowMillis: Long): List<CustomerSummary> =
         all.filter { it.isEmpty && !it.pinned && !it.archived && nowMillis - it.createdAt > DAY }
 }
 
 object Similar {
     /**
-     * نخستین جفت مشتری با واژه‌های نام یکسان (بی‌توجه به آقای/خانم/دکتر…)؛
+     * نخستین جفت متقاضی با واژه‌های نام یکسان (بی‌توجه به آقای/خانم/دکتر…)؛
      * جفت‌هایی که کاربر گفته «جدا هستند» رد می‌شوند. جفت: (a, b) با a < b.
      */
     fun firstPair(customers: List<Pair<Long, String>>, notSimilar: Set<Pair<Long, Long>>): Pair<Long, Long>? {

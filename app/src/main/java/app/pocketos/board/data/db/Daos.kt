@@ -8,7 +8,7 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
-/** یک ردیف فهرست مشتری‌ها با شمارش‌ها. */
+/** یک ردیف فهرست متقاضی‌ها با شمارش‌ها. */
 data class CustomerRow(
     @Embedded val customer: CustomerEntity,
     val openCases: Int,
@@ -236,7 +236,7 @@ interface BulkDao {
     suspend fun purgeCustomers(cutoff: Long)
 }
 
-/** کار همراه نام مشتری/پرونده برای تقویم و جست‌وجو. */
+/** کار همراه نام متقاضی/پرونده برای تقویم و جست‌وجو. */
 data class CalTaskRow(
     @Embedded val task: TaskEntity,
     val customerName: String?,
@@ -248,7 +248,7 @@ data class CalTaskRow(
 /** مهلت پروندهٔ باز. */
 data class CaseDueRow(val id: Long, val title: String, val customerId: Long, val customerName: String, val dueDay: String)
 
-/** یادداشت همراه نام مشتری (نتیجهٔ جست‌وجو). */
+/** یادداشت همراه نام متقاضی (نتیجهٔ جست‌وجو). */
 data class NoteRow(@Embedded val item: ItemEntity, val customerName: String?)
 
 /** پروندهٔ باز با اطلاعات لازم برای «نیاز به توجه». */
@@ -264,12 +264,12 @@ data class OpenCaseRow(
 
 data class CustomerCount(val id: Long, val name: String, val n: Int)
 
-/** پروندهٔ باز با نام مشتری و وضعیت (پاسخ دستیار). */
+/** پروندهٔ باز با نام متقاضی و وضعیت (پاسخ دستیار). */
 data class OpenCaseBrief(val id: Long, val title: String, val customerName: String?, val status: String)
 
 data class KindCount(val kind: String, val n: Int)
 
-/** پروندهٔ باز همراه نام مشتری، برای انتخاب‌گر «ثبت در». */
+/** پروندهٔ باز همراه نام متقاضی، برای انتخاب‌گر «ثبت در». */
 data class RecentCase(val id: Long, val title: String, val customerId: Long, val customerName: String)
 
 @Dao
@@ -452,7 +452,7 @@ interface TaskDao {
     @Query("UPDATE tasks SET deletedAt = :ts WHERE deletedAt IS NULL AND doneAt IS NULL AND dueDay <= :cutoff")
     suspend fun deleteOld(cutoff: String, ts: Long): Int
 
-    /** هر تغییر در کارها، مشتری‌ها یا پرونده‌ها این را دوباره منتشر می‌کند (برای تازه‌سازی نتیجهٔ جست‌وجو). */
+    /** هر تغییر در کارها، متقاضی‌ها یا پرونده‌ها این را دوباره منتشر می‌کند (برای تازه‌سازی نتیجهٔ جست‌وجو). */
     @Query("SELECT (SELECT COUNT(*) FROM tasks) + (SELECT COUNT(*) FROM customers) + (SELECT COUNT(*) FROM cases)")
     fun observeVersion(): Flow<Int>
 
@@ -483,4 +483,39 @@ interface PrefDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun put(p: PrefEntity)
+}
+
+/** یک شاخهٔ درخت: شمارش‌های هر متقاضی. */
+data class BranchRow(
+    val id: Long,
+    val name: String,
+    val archivedAt: Long?,
+    val done: Int,
+    val doneWeek: Int,
+    val open: Int,
+    val fruits: Int,
+    val lastActivity: Long,
+)
+
+/** شمارنده‌های «درخت» در خانه. */
+@Dao
+interface TreeDao {
+    @Query(
+        """SELECT c.id AS id, c.name AS name, c.archivedAt AS archivedAt,
+           (SELECT COUNT(*) FROM tasks t WHERE t.customerId = c.id AND t.deletedAt IS NULL AND t.doneAt IS NOT NULL) AS done,
+           (SELECT COUNT(*) FROM tasks t WHERE t.customerId = c.id AND t.deletedAt IS NULL AND t.doneAt >= :from AND t.doneAt < :to) AS doneWeek,
+           (SELECT COUNT(*) FROM tasks t WHERE t.customerId = c.id AND t.deletedAt IS NULL AND t.doneAt IS NULL) AS open,
+           (SELECT COUNT(*) FROM cases k WHERE k.customerId = c.id AND k.deletedAt IS NULL AND k.status = 'final') AS fruits,
+           c.lastActivity AS lastActivity
+           FROM customers c WHERE c.deletedAt IS NULL ORDER BY c.lastActivity DESC""",
+    )
+    fun observeBranches(from: Long, to: Long): Flow<List<BranchRow>>
+
+    /** کارهای انجام‌شده با زمان انجام در [from, to) (میلی‌ثانیه)؛ حذف‌شده‌ها نیستند. */
+    @Query("SELECT COUNT(*) FROM tasks WHERE deletedAt IS NULL AND doneAt >= :from AND doneAt < :to")
+    fun observeDone(from: Long, to: Long): Flow<Int>
+
+    /** کارهای بازِ دارای مهلت در بازهٔ روزها (متن ISO). */
+    @Query("SELECT COUNT(*) FROM tasks WHERE deletedAt IS NULL AND doneAt IS NULL AND dueDay >= :from AND dueDay <= :to")
+    fun observeOpenDue(from: String, to: String): Flow<Int>
 }

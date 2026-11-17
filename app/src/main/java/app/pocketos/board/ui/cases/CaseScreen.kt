@@ -95,7 +95,7 @@ fun CaseScreen(
             item {
                 Row(Modifier.padding(top = 4.dp)) {
                     st.customer?.let { Crumb(it.name, it.id) { onOpenCustomer(k.customerId) } }
-                        ?: TextButton({ onOpenCustomer(k.customerId) }) { Text("‹ مشتری") }
+                        ?: TextButton({ onOpenCustomer(k.customerId) }) { Text("‹ متقاضی") }
                 }
             }
             item {

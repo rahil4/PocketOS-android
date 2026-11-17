@@ -2,7 +2,7 @@ package app.pocketos.board.domain
 
 import java.time.LocalDate
 
-/** مشتری برای تطبیق نام در دستیار. */
+/** متقاضی برای تطبیق نام در دستیار. */
 data class AssistCustomer(val id: Long, val name: String, val phone: String, val archived: Boolean, val toks: Set<String>) {
     companion object {
         fun of(id: Long, name: String, phone: String = "", archived: Boolean = false) =
@@ -76,7 +76,7 @@ object Assistant {
         return emptyList<AssistCustomer>() to "none"
     }
 
-    /** واژه‌های نام مشتری و «برای/آقای/خانم…» کنارشان حذف می‌شود؛ شاخص‌های حذف‌شده برمی‌گردد. */
+    /** واژه‌های نام متقاضی و «برای/آقای/خانم…» کنارشان حذف می‌شود؛ شاخص‌های حذف‌شده برمی‌گردد. */
     private fun dropIndices(ws: List<String>, cust: AssistCustomer): Set<Int> {
         val drop = HashSet<Int>()
         ws.forEachIndexed { i, w ->
@@ -164,7 +164,7 @@ object Assistant {
         if (dueDay != null && rest.isNotEmpty()) {
             val rw = words(rest)
             var found = matchCustomers(rw, customers, loose = false).first
-            if (found.isEmpty()) { // همهٔ واژه‌های باقی‌مانده بخشی از نامِ یک مشتری‌اند
+            if (found.isEmpty()) { // همهٔ واژه‌های باقی‌مانده بخشی از نامِ یک متقاضی‌اند
                 val rset = rw.filter { it !in FILLER && it !in HONORIFICS }.toSet()
                 if (rset.isNotEmpty()) {
                     val f = customers.filter { it.toks.containsAll(rset) }
@@ -182,7 +182,7 @@ object Assistant {
                 val dateText = raw.replaceFirst(rest, "").trim()
                 val shared = found.flatMap { it.toks }.toSet()
                 val clean = rw.filter { it !in shared && it !in HONORIFICS && it != "برای" }.joinToString(" ")
-                return AssistIntent.Choices(found.take(6).map { it.id }, "$dateText برای {name} $clean".trim(), "کدام مشتری؟")
+                return AssistIntent.Choices(found.take(6).map { it.id }, "$dateText برای {name} $clean".trim(), "کدام متقاضی؟")
             }
             val cust = found.firstOrNull()
             val t = title(rest, cust)
@@ -193,7 +193,7 @@ object Assistant {
         // برچسب: «#اداره»
         Tags.tagsIn(raw).firstOrNull()?.let { return AssistIntent.Tag(it) }
 
-        // فقط نام مشتری (حداکثر ۴ واژه)
+        // فقط نام متقاضی (حداکثر ۴ واژه)
         val nameWs = ws.filter { it !in HONORIFICS }
         if (nameWs.isNotEmpty() && nameWs.size <= 4) {
             val wset = nameWs.toSet()

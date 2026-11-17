@@ -97,7 +97,7 @@ class HomeTest {
     fun homeLimitsFourCustomersAndThreeItemsEach() {
         val entries = buildList {
             for (c in 1L..6L) for (i in 1..4) add(entry("t${c * 10 + i}", c))
-        } // ۶ مشتری × ۴ مورد = ۲۴
+        } // ۶ متقاضی × ۴ مورد = ۲۴
         val (shown, extra) = HomeLogic.limit(HomeLogic.group(entries))
         assertEquals(4, shown.size)
         assertTrue(shown.all { it.items.size == 3 })
