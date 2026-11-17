@@ -45,6 +45,7 @@ import java.time.LocalDate
 private val TAG_AT_END = Regex("#([\\p{L}\\p{N}_]*)$")
 
 /** یادداشت جدید: روز و تکرار از متن تشخیص داده می‌شود؛ هیچ فیلد اجباری نیست. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NoteDialog(vm: StreamViewModel, onDismiss: () -> Unit) {
     var text by rememberSaveable { mutableStateOf("") }
