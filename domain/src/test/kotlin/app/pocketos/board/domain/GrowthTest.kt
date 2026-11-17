@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class GrowthTest {
-    private val today = LocalDate.of(2026, 11, 16) // یکشنبه ۲۵ آبان ۱۴۰۵
+    private val today = LocalDate.of(2026, 11, 16) // دوشنبه ۲۵ آبان ۱۴۰۵
 
     @Test
     fun weekRunsSaturdayToFriday() {
@@ -15,8 +15,8 @@ class GrowthTest {
         assertEquals(LocalDate.of(2026, 11, 20), p.whole.to) // جمعه
         assertEquals(Span(LocalDate.of(2026, 11, 14), today), p.toDate)
         assertEquals(LocalDate.of(2026, 11, 7), p.prevWhole.from)
-        assertEquals(LocalDate.of(2026, 11, 8), p.prevToDate.to) // دو روز اول هفتهٔ قبل
-        assertEquals(2, p.prevToDate.days)
+        assertEquals(LocalDate.of(2026, 11, 9), p.prevToDate.to) // سه روز اول هفتهٔ قبل (شنبه تا دوشنبه)
+        assertEquals(3, p.prevToDate.days)
     }
 
     @Test
