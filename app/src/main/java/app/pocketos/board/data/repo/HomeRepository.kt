@@ -116,7 +116,7 @@ class HomeRepository @Inject constructor(private val db: BoardDatabase, private 
 
     /** مثل [loadEvening] ولی با هر تغییر کارها/یادداشت‌ها دوباره می‌آید (ویرایش و انجام‌شدن از خودِ صفحه). */
     fun observeEvening(): Flow<EveningData> =
-        db.invalidationTracker.createFlow("tasks", "items", "customers", "cases").map { loadEvening() }
+        combine(db.tickDao().tasks(), db.tickDao().items(), db.tickDao().customers()) { _, _, _ -> }.map { loadEvening() }
 
     /** هر کار مانده به روزِ انتخابی می‌رود یا رها می‌شود. تعداد کارهای فردا را برمی‌گرداند. */
     suspend fun closeDay(choices: Map<Long, String>): Int = db.withTransaction {

@@ -26,6 +26,7 @@ abstract class BoardDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun prefDao(): PrefDao
     abstract fun treeDao(): TreeDao
+    abstract fun tickDao(): TickDao
 
     companion object {
         const val NAME = "board.db"

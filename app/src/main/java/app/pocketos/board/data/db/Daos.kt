@@ -519,3 +519,16 @@ interface TreeDao {
     @Query("SELECT COUNT(*) FROM tasks WHERE deletedAt IS NULL AND doneAt IS NULL AND dueDay >= :from AND dueDay <= :to")
     fun observeOpenDue(from: String, to: String): Flow<Int>
 }
+
+/** نشانهٔ تغییر: با هر نوشتن روی جدول‌ها یک بار می‌آید (مقدارش مهم نیست). برای صفحه‌هایی که باید با ویرایش به‌روز شوند. */
+@Dao
+interface TickDao {
+    @Query("SELECT COUNT(*) FROM tasks")
+    fun tasks(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM items")
+    fun items(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM customers")
+    fun customers(): Flow<Int>
+}
