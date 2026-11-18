@@ -13,6 +13,7 @@ import app.pocketos.board.domain.HomeLogic
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -112,6 +113,10 @@ class HomeRepository @Inject constructor(private val db: BoardDatabase, private 
         val start = dayStartMillis()
         return EveningData(tasks.openUpTo(today().toString()), items.countCreatedSince(start), tasks.countDoneSince(start))
     }
+
+    /** مثل [loadEvening] ولی با هر تغییر کارها/یادداشت‌ها دوباره می‌آید (ویرایش و انجام‌شدن از خودِ صفحه). */
+    fun observeEvening(): Flow<EveningData> =
+        db.invalidationTracker.createFlow("tasks", "items", "customers", "cases").map { loadEvening() }
 
     /** هر کار مانده به روزِ انتخابی می‌رود یا رها می‌شود. تعداد کارهای فردا را برمی‌گرداند. */
     suspend fun closeDay(choices: Map<Long, String>): Int = db.withTransaction {

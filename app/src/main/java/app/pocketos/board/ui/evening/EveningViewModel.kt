@@ -37,8 +37,10 @@ class EveningViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val d = repo.loadEvening()
-            _state.value = EveningUi(true, d.tasks, d.made, d.done, d.tasks.associate { it.task.id to "tomorrow" })
+            repo.observeEvening().collect { d ->
+                val prev = _state.value.choices
+                _state.value = EveningUi(true, d.tasks, d.made, d.done, d.tasks.associate { it.task.id to (prev[it.task.id] ?: "tomorrow") })
+            }
         }
     }
 

@@ -52,3 +52,36 @@ class InboxEventTest {
         assertEquals(listOf(ItemKind.TEXT), items.observeInbox().first().map { it.kind })
     }
 }
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
+class EveningObserveTest {
+    private lateinit var db: BoardDatabase
+    private val today = LocalDate.of(2026, 11, 15)
+    private val clock = MutableClock.at(today)
+
+    @Before
+    fun setUp() {
+        val ctx = ApplicationProvider.getApplicationContext<Context>()
+        db = Room.inMemoryDatabaseBuilder(ctx, BoardDatabase::class.java).allowMainThreadQueries().build()
+    }
+
+    @After
+    fun tearDown() = db.close()
+
+    @Test
+    fun eveningRowsCarryCustomerNameAndFollowTaskChanges() = runBlocking {
+        val ctx = ApplicationProvider.getApplicationContext<Context>()
+        val customers = app.pocketos.board.data.repo.CustomerRepository(db, clock)
+        val tasks = TaskRepository(db, clock, ItemRepository(db, clock, FileStore(ctx)))
+        val home = app.pocketos.board.data.repo.HomeRepository(db, clock)
+        val c = customers.create("آقای رنجبر")
+        val id = tasks.create(Target(c, null), "ارسال نقشه", today)
+
+        val first = home.observeEvening().first()
+        assertEquals(listOf("آقای رنجبر"), first.tasks.map { it.customerName })
+
+        tasks.done(id)
+        assertEquals(0, home.observeEvening().first().tasks.size)
+    }
+}

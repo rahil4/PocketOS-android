@@ -1,6 +1,13 @@
 package app.pocketos.board.ui.evening
 
 import androidx.compose.foundation.border
+import app.pocketos.board.ui.stream.TaskRow
+import app.pocketos.board.ui.stream.StreamViewModel
+import app.pocketos.board.ui.common.Avatar
+import androidx.compose.ui.draw.clip
+import androidx.compose.runtime.key
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -38,7 +45,7 @@ private val CHOICES = listOf("tomorrow" to "فردا", "after" to "پس‌فرد
 /** «امروز را ببندیم»: هر کار مانده کجا برود؟ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun EveningScreen(onBack: () -> Unit, vm: EveningViewModel = hiltViewModel()) {
+fun EveningScreen(onBack: () -> Unit, vm: EveningViewModel = hiltViewModel(), stream: StreamViewModel = hiltViewModel()) {
     val st by vm.state.collectAsStateWithLifecycle()
     LazyColumn(
         Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp),
@@ -60,24 +67,35 @@ fun EveningScreen(onBack: () -> Unit, vm: EveningViewModel = hiltViewModel()) {
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted,
                 )
             }
-            items(st.tasks, key = { it.task.id }) { r ->
-                Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                    Row(verticalAlignment = Alignment.Top) {
-                        Column(Modifier.size(44.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Column(Modifier.padding(top = 10.dp).size(24.dp).border(2.dp, MaterialTheme.board.muted, CircleShape)) {}
-                        }
-                        Column(Modifier.weight(1f).padding(top = 6.dp)) {
-                            Text(Digits.fa(Tags.strip(r.task.title).ifEmpty { r.task.title }), style = MaterialTheme.typography.bodyLarge)
-                            r.caseTitle?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted) }
-                        }
-                    }
-                    FlowRow(
-                        Modifier.padding(start = 44.dp, top = 4.dp, bottom = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp),
+            // مثل تقویم: کارت برای هر متقاضی، ردیف کار با حلقه و منوی ⋯، و زیرش انتخاب «کجا برود؟»
+            val groups = st.tasks.groupBy { it.task.customerId }
+            groups.forEach { (cid, rows) ->
+                item("g${cid ?: 0}") {
+                    val shape = RoundedCornerShape(14.dp)
+                    Column(
+                        Modifier.fillMaxWidth().clip(shape).background(MaterialTheme.colorScheme.surface)
+                            .border(1.dp, MaterialTheme.board.line, shape).padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
-                        CHOICES.forEach { (code, label) -> Chip(label, selected = st.choices[r.task.id] == code) { vm.choose(r.task.id, code) } }
+                        val name = rows.first().customerName
+                        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (name != null && cid != null) Avatar(name, cid, 26.dp)
+                            Text(name ?: "بدون متقاضی", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text(Digits.fa("${rows.size} کار"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
+                        }
+                        rows.forEach { r ->
+                            key(r.task.id) {
+                                TaskRow(r.task, stream, onTag = {}, done = false, showDue = true) {
+                                    r.caseTitle?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted) }
+                                    FlowRow(
+                                        Modifier.padding(top = 4.dp, bottom = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp),
+                                    ) {
+                                        CHOICES.forEach { (code, label) -> Chip(label, selected = st.choices[r.task.id] == code) { vm.choose(r.task.id, code) } }
+                                    }
+                                }
+                            }
+                        }
                     }
-                    HorizontalDivider(color = MaterialTheme.board.line)
                 }
             }
         } else if (st.loaded) {
