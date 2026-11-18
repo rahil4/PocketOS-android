@@ -212,11 +212,20 @@ fun ItemCard(item: ItemEntity, vm: StreamViewModel, nowMillis: Long, onTag: (Str
     }
 
     if (item.kind == ItemKind.EVENT) {
-        Text(
-            "✓ " + Digits.fa(item.text) + " · " + stamp,
-            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp),
-        )
+        // رویداد «کار انجام شد»: فقط یک ردیف کم‌رنگ، ولی با منوی ⋯ تا بشود حذفش کرد.
+        Row(Modifier.fillMaxWidth().padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "✓ " + Digits.fa(item.text) + " · " + stamp,
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.board.muted,
+                modifier = Modifier.weight(1f).padding(vertical = 2.dp),
+            )
+            Box {
+                TextButton({ menu = true }) { Text("⋯") }
+                DropdownMenu(menu, { menu = false }) {
+                    DropdownMenuItem({ Text("حذف") }, { menu = false; vm.deleteItem(item) })
+                }
+            }
+        }
         return
     }
 

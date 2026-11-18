@@ -314,7 +314,7 @@ interface ItemDao {
     )
     fun observeInbox(): Flow<List<ItemEntity>>
 
-    @Query("SELECT COUNT(*) FROM items WHERE customerId IS NULL AND caseId IS NULL AND deletedAt IS NULL")
+    @Query("SELECT COUNT(*) FROM items WHERE customerId IS NULL AND caseId IS NULL AND deletedAt IS NULL AND kind != 'event'")
     fun observeInboxCount(): Flow<Int>
 
     @Query("UPDATE items SET deletedAt = :ts WHERE id = :id")
