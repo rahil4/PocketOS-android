@@ -44,6 +44,13 @@ class PrefRepository @Inject constructor(db: BoardDatabase) {
         const val LAST_BACKUP = "last_backup_dl"
         const val LAST_BACKUP_REMIND = "last_backup_remind"
 
+        /** ویجت «امروز». */
+        const val WIDGET_NAMES = "widget_names"
+        const val WIDGET_COUNT = "widget_count"
+        const val WIDGET_OPACITY = "widget_opacity"
+        const val WIDGET_TAG_MODE = "widget_tag_mode"
+        const val WIDGET_TAGS = "widget_tags"
+
         /** آخرین نمای تقویم. */
         const val CAL_VIEW = "cal_view"
     }
