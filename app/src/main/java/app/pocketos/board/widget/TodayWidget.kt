@@ -2,7 +2,6 @@ package app.pocketos.board.widget
 
 import android.content.Context
 import android.content.Intent
-import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpSize
@@ -19,9 +18,7 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.layout.Alignment
-import androidx.glance.layout.Box
 import androidx.glance.layout.Column
-import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
@@ -61,13 +58,13 @@ data class WidgetData(val today: Int, val late: Int, val tasks: List<WidgetTask>
 
 private val CARD_BASE = Color(0xFF192019)
 private val TEXT = ColorProvider(Color(0xFFE8EEE9))
+private val MUTED_TEXT = ColorProvider(Color(0xFFC9D3CC))
 private val MUTED = ColorProvider(Color(0xFF8B9A90))
 private val ACCENT = ColorProvider(Color(0xFF8CC9A1))
 private val AMBER = ColorProvider(Color(0xFFE2B872))
-private val INK = ColorProvider(Color(0xFF0C1710))
 
 /**
- * ویجت «امروز»: تاریخ، «N کار دارید»، کارهای امروز و مانده، و «＋ یادداشت». لمس، برنامه را باز می‌کند.
+ * ویجت «امروز»: تاریخ، «N کار دارید» و کارهای امروز و مانده (نام متقاضی بالا و درشت، متن کار تا دو خط). لمس، برنامه را باز می‌کند.
  * راست‌به‌چپ؛ تنظیمات (نام متقاضی، تعداد، شفافیت، برچسب‌ها) در [WidgetConfigActivity].
  */
 class TodayWidget : GlanceAppWidget() {
@@ -95,12 +92,8 @@ class TodayWidget : GlanceAppWidget() {
     private fun Content(context: Context, d: WidgetData) {
         val size = LocalSize.current
         val openApp = actionStartActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        val quickNote = actionStartActivity(
-            Intent(context, MainActivity::class.java).setAction(MainActivity.ACTION_QUICK_NOTE).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-        )
         val small = size.width < 200.dp
         val rowsShown = if (size.height >= 200.dp) d.prefs.count else minOf(d.prefs.count, 3)
-        val rtl = context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
         val card = ColorProvider(CARD_BASE.copy(alpha = d.prefs.opacity / 100f))
         val right = TextAlign.Right    // مطلق (نه start): چیدمان ویجت از جهت لانچر می‌آید، اما متن همیشه راست‌چین است
         val full = GlanceModifier.fillMaxWidth()
@@ -113,8 +106,6 @@ class TodayWidget : GlanceAppWidget() {
                 Text(d.date, style = TextStyle(color = MUTED, fontSize = 11.sp, textAlign = TextAlign.Center), maxLines = 1)
                 Text(Digits.fa(d.total), style = TextStyle(color = ACCENT, fontSize = 30.sp, fontWeight = FontWeight.Bold))
                 Text(if (d.late > 0) Digits.fa("کار · ${d.late} مانده") else "کار", style = TextStyle(color = if (d.late > 0) AMBER else MUTED, fontSize = 11.sp))
-                Spacer(GlanceModifier.height(6.dp))
-                NoteButton(quickNote)
             } else {
                 Text(d.date, full, style = TextStyle(color = TEXT, fontSize = 15.sp, fontWeight = FontWeight.Bold, textAlign = right), maxLines = 1)
                 Text(
@@ -126,28 +117,17 @@ class TodayWidget : GlanceAppWidget() {
                     Text("✓ همه‌چیز مرتب است", full, style = TextStyle(color = MUTED, fontSize = 12.sp, textAlign = right))
                 }
                 d.tasks.take(rowsShown).forEach { t ->
-                    Column(full.padding(top = 6.dp)) {
-                        Text(Digits.fa(t.title.take(70)), full, style = TextStyle(color = if (t.late) AMBER else TEXT, fontSize = 12.sp, textAlign = right), maxLines = 1)
-                        if (d.prefs.showCustomer && !t.customer.isNullOrBlank()) {
-                            Text(t.customer, full, style = TextStyle(color = MUTED, fontSize = 10.sp, textAlign = right), maxLines = 1)
+                    val color = if (t.late) AMBER else TEXT
+                    Column(full.padding(top = 8.dp)) {
+                        // نام متقاضی بالا و درشت، متن کار زیرش (تا دو خط، نه یک خط بریده)
+                        val showName = d.prefs.showCustomer && !t.customer.isNullOrBlank()
+                        if (showName) {
+                            Text(t.customer.orEmpty(), full, style = TextStyle(color = color, fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = right), maxLines = 1)
                         }
+                        Text(Digits.fa(t.title), full, style = TextStyle(color = if (t.late) AMBER else if (showName) MUTED_TEXT else TEXT, fontSize = 12.sp, textAlign = right), maxLines = 2)
                     }
                 }
-                Spacer(GlanceModifier.defaultWeight())
-                // دکمه سمت راست بصری: در چیدمان چپ‌به‌راست آخر، در راست‌به‌چپ اول.
-                Row(full) {
-                    if (!rtl) Spacer(GlanceModifier.defaultWeight())
-                    NoteButton(quickNote)
-                    if (rtl) Spacer(GlanceModifier.defaultWeight())
-                }
             }
-        }
-    }
-
-    @Composable
-    private fun NoteButton(action: androidx.glance.action.Action) {
-        Box(GlanceModifier.background(ACCENT).cornerRadius(99.dp).padding(horizontal = 14.dp, vertical = 5.dp).clickable(action)) {
-            Text("＋ یادداشت", style = TextStyle(color = INK, fontSize = 11.sp, fontWeight = FontWeight.Bold))
         }
     }
 }
