@@ -20,6 +20,7 @@ import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Spacer
+import androidx.glance.layout.absolutePadding
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
@@ -57,10 +58,6 @@ data class WidgetData(val today: Int, val late: Int, val tasks: List<WidgetTask>
 }
 
 private val CARD_BASE = Color(0xFF192019)
-private val TEXT = ColorProvider(Color(0xFFE8EEE9))
-private val MUTED_TEXT = ColorProvider(Color(0xFFC9D3CC))
-private val MUTED = ColorProvider(Color(0xFF8B9A90))
-private val ACCENT = ColorProvider(Color(0xFF8CC9A1))
 private val AMBER = ColorProvider(Color(0xFFE2B872))
 
 /**
@@ -97,34 +94,43 @@ class TodayWidget : GlanceAppWidget() {
         val card = ColorProvider(CARD_BASE.copy(alpha = d.prefs.opacity / 100f))
         val right = TextAlign.Right    // مطلق (نه start): چیدمان ویجت از جهت لانچر می‌آید، اما متن همیشه راست‌چین است
         val full = GlanceModifier.fillMaxWidth()
+        // رنگ متنِ انتخابی کاربر، با سه غلظت؛ «مانده» همیشه کهربایی
+        val base = Color(d.prefs.tone.argb)
+        val ink = ColorProvider(base)
+        val soft = ColorProvider(base.copy(alpha = 0.82f))
+        val muted = ColorProvider(base.copy(alpha = 0.62f))
 
         Column(
             GlanceModifier.fillMaxSize().background(card).cornerRadius(22.dp).padding(12.dp).clickable(openApp),
             horizontalAlignment = if (small) Alignment.Horizontal.CenterHorizontally else Alignment.Horizontal.Start,
         ) {
             if (small) {
-                Text(d.date, style = TextStyle(color = MUTED, fontSize = 11.sp, textAlign = TextAlign.Center), maxLines = 1)
-                Text(Digits.fa(d.total), style = TextStyle(color = ACCENT, fontSize = 30.sp, fontWeight = FontWeight.Bold))
-                Text(if (d.late > 0) Digits.fa("کار · ${d.late} مانده") else "کار", style = TextStyle(color = if (d.late > 0) AMBER else MUTED, fontSize = 11.sp))
+                Text(d.date, style = TextStyle(color = muted, fontSize = 11.sp, textAlign = TextAlign.Center), maxLines = 1)
+                Text(Digits.fa(d.total), style = TextStyle(color = ink, fontSize = 30.sp, fontWeight = FontWeight.Bold))
+                Text(if (d.late > 0) Digits.fa("کار · ${d.late} مانده") else "کار", style = TextStyle(color = if (d.late > 0) AMBER else muted, fontSize = 11.sp))
             } else {
-                Text(d.date, full, style = TextStyle(color = TEXT, fontSize = 15.sp, fontWeight = FontWeight.Bold, textAlign = right), maxLines = 1)
+                Text(d.date, full, style = TextStyle(color = ink, fontSize = 15.sp, fontWeight = FontWeight.Bold, textAlign = right), maxLines = 1)
                 Text(
                     WidgetLogic.countLine(d.total, d.late), full,
-                    style = TextStyle(color = if (d.late > 0) AMBER else MUTED, fontSize = 12.sp, textAlign = right), maxLines = 1,
+                    style = TextStyle(color = if (d.late > 0) AMBER else muted, fontSize = 12.sp, textAlign = right), maxLines = 1,
                 )
                 if (d.tasks.isEmpty()) {
                     Spacer(GlanceModifier.height(6.dp))
-                    Text("✓ همه‌چیز مرتب است", full, style = TextStyle(color = MUTED, fontSize = 12.sp, textAlign = right))
+                    Text("✓ همه‌چیز مرتب است", full, style = TextStyle(color = muted, fontSize = 12.sp, textAlign = right))
                 }
                 d.tasks.take(rowsShown).forEach { t ->
-                    val color = if (t.late) AMBER else TEXT
+                    val color = if (t.late) AMBER else ink
                     Column(full.padding(top = 8.dp)) {
                         // نام متقاضی بالا و درشت، متن کار زیرش (تا دو خط، نه یک خط بریده)
                         val showName = d.prefs.showCustomer && !t.customer.isNullOrBlank()
                         if (showName) {
                             Text(t.customer.orEmpty(), full, style = TextStyle(color = color, fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = right), maxLines = 1)
                         }
-                        Text(Digits.fa(t.title), full, style = TextStyle(color = if (t.late) AMBER else if (showName) MUTED_TEXT else TEXT, fontSize = 12.sp, textAlign = right), maxLines = 2)
+                        // متن کار ۴ فاصله جلوتر از نام (از راست؛ بدون نام متقاضی سر خط)
+                        Text(
+                            Digits.fa(t.title), if (showName) full.absolutePadding(right = 14.dp) else full,
+                            style = TextStyle(color = if (t.late) AMBER else if (showName) soft else ink, fontSize = 12.sp, textAlign = right), maxLines = 2,
+                        )
                     }
                 }
             }

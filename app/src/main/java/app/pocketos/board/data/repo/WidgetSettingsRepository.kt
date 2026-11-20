@@ -1,6 +1,7 @@
 package app.pocketos.board.data.repo
 
 import app.pocketos.board.domain.TagMode
+import app.pocketos.board.domain.WidgetTone
 import app.pocketos.board.domain.WidgetLogic
 import app.pocketos.board.domain.WidgetPrefs
 import javax.inject.Inject
@@ -15,6 +16,7 @@ class WidgetSettingsRepository @Inject constructor(private val prefs: PrefReposi
         opacity = WidgetPrefs.clampOpacity(prefs.getString(PrefRepository.WIDGET_OPACITY)?.toIntOrNull() ?: 100),
         tagMode = TagMode.of(prefs.getString(PrefRepository.WIDGET_TAG_MODE)),
         tags = WidgetLogic.decodeTags(prefs.getString(PrefRepository.WIDGET_TAGS)),
+        tone = WidgetTone.of(prefs.getString(PrefRepository.WIDGET_TONE)),
     )
 
     suspend fun save(p: WidgetPrefs) {
@@ -23,5 +25,6 @@ class WidgetSettingsRepository @Inject constructor(private val prefs: PrefReposi
         prefs.setString(PrefRepository.WIDGET_OPACITY, WidgetPrefs.clampOpacity(p.opacity).toString())
         prefs.setString(PrefRepository.WIDGET_TAG_MODE, p.tagMode.code)
         prefs.setString(PrefRepository.WIDGET_TAGS, WidgetLogic.encodeTags(p.tags))
+        prefs.setString(PrefRepository.WIDGET_TONE, p.tone.code)
     }
 }

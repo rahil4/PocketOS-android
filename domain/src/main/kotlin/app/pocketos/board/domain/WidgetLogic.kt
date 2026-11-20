@@ -11,6 +11,19 @@ enum class TagMode(val code: String) {
     }
 }
 
+/** رنگ متن ویجت (کارهای «مانده» همیشه کهربایی می‌مانند). */
+enum class WidgetTone(val code: String, val argb: Long, val label: String) {
+    LIGHT("light", 0xFFE8EEE9, "روشن"),
+    GREEN("green", 0xFF8CC9A1, "سبز"),
+    BLUE("blue", 0xFF8FB8E8, "آبی"),
+    CREAM("cream", 0xFFD9C7A3, "کرم"),
+    DARK("dark", 0xFF152019, "تیره");
+
+    companion object {
+        fun of(code: String?): WidgetTone = entries.firstOrNull { it.code == code } ?: LIGHT
+    }
+}
+
 /** تنظیمات ویجت «امروز» (روی خود گوشی؛ برای همهٔ ویجت‌ها یکی). */
 data class WidgetPrefs(
     val showCustomer: Boolean = true,
@@ -19,6 +32,7 @@ data class WidgetPrefs(
     val opacity: Int = 100,
     val tagMode: TagMode = TagMode.NONE,
     val tags: Set<String> = emptySet(),
+    val tone: WidgetTone = WidgetTone.LIGHT,
 ) {
     companion object {
         val COUNTS = listOf(3, 6, 10)

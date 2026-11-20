@@ -37,6 +37,14 @@ class WidgetLogicTest {
     }
 
     @Test
+    fun toneFallsBackToLight() {
+        assertEquals(WidgetTone.LIGHT, WidgetTone.of(null))
+        assertEquals(WidgetTone.LIGHT, WidgetTone.of("nope"))
+        assertEquals(WidgetTone.DARK, WidgetTone.of("dark"))
+        WidgetTone.entries.forEach { assertEquals(it, WidgetTone.of(it.code)) }
+    }
+
+    @Test
     fun clampsAndEncoding() {
         assertEquals(6, WidgetPrefs.clampCount(7))
         assertEquals(10, WidgetPrefs.clampCount(10))

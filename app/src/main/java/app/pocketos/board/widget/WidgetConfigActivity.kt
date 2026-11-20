@@ -6,7 +6,15 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -46,6 +54,7 @@ import app.pocketos.board.data.repo.WidgetSettingsRepository
 import app.pocketos.board.domain.Digits
 import app.pocketos.board.domain.TagMode
 import app.pocketos.board.domain.WidgetPrefs
+import app.pocketos.board.domain.WidgetTone
 import app.pocketos.board.ui.common.Chip
 import app.pocketos.board.ui.common.Pill
 import app.pocketos.board.ui.theme.BoardTheme
@@ -124,6 +133,19 @@ class WidgetConfigActivity : ComponentActivity() {
                 onValueChangeFinished = { change(cur.copy(opacity = sliding)) },
                 valueRange = 0f..100f,
             )
+
+            Text("رنگ متن", color = MaterialTheme.board.muted)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                WidgetTone.entries.forEach { tone ->
+                    val on = cur.tone == tone
+                    Box(
+                        Modifier.size(36.dp).clip(CircleShape).background(Color(tone.argb))
+                            .border(if (on) 3.dp else 1.dp, if (on) MaterialTheme.colorScheme.primary else MaterialTheme.board.line, CircleShape)
+                            .clickable(onClickLabel = tone.label) { change(cur.copy(tone = tone)) },
+                    )
+                }
+            }
+            Text("«مانده‌ها» همچنان کهربایی می‌مانند.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.board.muted)
 
             Text("برچسب‌های نمایش‌داده‌شده", color = MaterialTheme.board.muted)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

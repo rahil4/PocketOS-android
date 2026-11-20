@@ -50,6 +50,7 @@ class PrefRepository @Inject constructor(db: BoardDatabase) {
         const val WIDGET_OPACITY = "widget_opacity"
         const val WIDGET_TAG_MODE = "widget_tag_mode"
         const val WIDGET_TAGS = "widget_tags"
+        const val WIDGET_TONE = "widget_tone"
 
         /** آخرین نمای تقویم. */
         const val CAL_VIEW = "cal_view"
