@@ -17,7 +17,7 @@ import app.pocketos.board.data.repo.SettingsRepository
 import app.pocketos.board.ui.BoardRoot
 import app.pocketos.board.ui.LaunchRequests
 import app.pocketos.board.ui.theme.BoardTheme
-import app.pocketos.board.widget.TodayWidget
+import app.pocketos.board.widget.updateAllBoardWidgets
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         // ویجت بعد از کار با اپ تازه شود.
-        CoroutineScope(Dispatchers.Default).launch { runCatching { TodayWidget().updateAllWidgets(applicationContext) } }
+        CoroutineScope(Dispatchers.Default).launch { runCatching { updateAllBoardWidgets(applicationContext) } }
     }
 
     private fun handle(intent: Intent?) {

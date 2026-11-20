@@ -4,7 +4,7 @@ import android.app.Application
 import app.pocketos.board.data.db.BoardDatabase
 import app.pocketos.board.data.repo.TrashRepository
 import app.pocketos.board.system.ReminderWorker
-import app.pocketos.board.widget.TodayWidget
+import app.pocketos.board.widget.updateAllBoardWidgets
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +29,7 @@ class BoardApp : Application() {
         ReminderWorker.schedule(this)
         // با هر تغییر در کارها، ویجت (تا وقتی برنامه زنده است) تازه می‌شود.
         scope.launch {
-            db.taskDao().observeVersion().debounce(2_000).collect { runCatching { TodayWidget().updateAllWidgets(applicationContext) } }
+            db.taskDao().observeVersion().debounce(2_000).collect { runCatching { updateAllBoardWidgets(applicationContext) } }
         }
     }
 }

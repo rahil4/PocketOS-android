@@ -48,10 +48,22 @@ object WidgetLogic {
         return Digits.fa("${Jalali.WEEKDAYS[d.dayOfWeek.value - 1]} ${j.day} ${Jalali.MONTHS[j.month - 1]}")
     }
 
-    /** «۳ کار دارید · ۱ مانده» یا «امروز کاری ندارید». */
-    fun countLine(total: Int, late: Int): String =
-        if (total == 0) "امروز کاری ندارید"
-        else Digits.fa("$total کار دارید" + if (late > 0) " · $late مانده" else "")
+    /** «۲ کار امروز · ۲ عقب‌مانده»؛ هیچ‌کدام نبود «امروز کاری ندارید». */
+    fun countLine(today: Int, late: Int): String = when {
+        today == 0 && late == 0 -> "امروز کاری ندارید"
+        today == 0 -> Digits.fa("امروز کاری ندارید · $late عقب‌مانده")
+        late == 0 -> Digits.fa("$today کار امروز")
+        else -> Digits.fa("$today کار امروز · $late عقب‌مانده")
+    }
+
+    /** چند کار از هر بخش نشان داده شود: اول امروز، باقی جا برای عقب‌مانده‌ها؛ [more] = آنچه جا نشد. */
+    data class Slots(val today: Int, val late: Int, val more: Int)
+
+    fun slots(todayN: Int, lateN: Int, limit: Int): Slots {
+        val t = minOf(todayN, limit)
+        val l = minOf(lateN, limit - t)
+        return Slots(t, l, todayN + lateN - t - l)
+    }
 
     /** برچسب‌هایی که طبق تنظیمات کنار این کار نوشته می‌شوند (به ترتیب متن). */
     fun shownTags(text: String?, p: WidgetPrefs): List<String> = when (p.tagMode) {

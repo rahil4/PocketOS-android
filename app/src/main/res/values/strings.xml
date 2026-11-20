@@ -4,5 +4,6 @@
     <string name="tab_home">خانه</string>
     <string name="tab_calendar">تقویم</string>
     <string name="tab_customers">متقاضی‌ها</string>
-    <string name="widget_description">کارهای امروز و ثبت سریع یادداشت</string>
+    <string name="widget_description">کارهای امروز و عقب‌مانده، در دو بخش</string>
+    <string name="counter_widget_description">فقط تاریخ، تعداد کار امروز و عقب‌مانده</string>
 </resources>

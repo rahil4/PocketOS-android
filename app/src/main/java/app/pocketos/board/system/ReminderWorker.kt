@@ -7,7 +7,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import app.pocketos.board.data.repo.ReminderService
-import app.pocketos.board.widget.TodayWidget
+import app.pocketos.board.widget.updateAllBoardWidgets
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -25,7 +25,7 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
     override suspend fun doWork(): Result {
         val entry = EntryPointAccessors.fromApplication(applicationContext, WorkEntryPoint::class.java)
         runCatching { entry.reminders().run() }
-        runCatching { TodayWidget().updateAllWidgets(applicationContext) }
+        runCatching { updateAllBoardWidgets(applicationContext) }
         return Result.success()
     }
 

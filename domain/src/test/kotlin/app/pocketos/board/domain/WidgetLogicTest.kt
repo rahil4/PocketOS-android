@@ -15,8 +15,17 @@ class WidgetLogicTest {
     @Test
     fun countLine() {
         assertEquals("امروز کاری ندارید", WidgetLogic.countLine(0, 0))
-        assertEquals("۳ کار دارید", WidgetLogic.countLine(3, 0))
-        assertEquals("۳ کار دارید · ۱ مانده", WidgetLogic.countLine(3, 1))
+        assertEquals("۳ کار امروز", WidgetLogic.countLine(3, 0))
+        assertEquals("۳ کار امروز · ۱ عقب‌مانده", WidgetLogic.countLine(3, 1))
+        assertEquals("امروز کاری ندارید · ۲ عقب‌مانده", WidgetLogic.countLine(0, 2))
+    }
+
+    @Test
+    fun slotsFillTodayFirstThenLate() {
+        assertEquals(WidgetLogic.Slots(2, 2, 0), WidgetLogic.slots(2, 2, 6))
+        assertEquals(WidgetLogic.Slots(3, 0, 12), WidgetLogic.slots(3, 12, 3))
+        assertEquals(WidgetLogic.Slots(2, 4, 8), WidgetLogic.slots(2, 12, 6))
+        assertEquals(WidgetLogic.Slots(0, 6, 4), WidgetLogic.slots(0, 10, 6))
     }
 
     @Test

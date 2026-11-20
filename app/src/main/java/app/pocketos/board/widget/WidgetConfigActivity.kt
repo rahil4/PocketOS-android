@@ -97,7 +97,7 @@ class WidgetConfigActivity : ComponentActivity() {
     private fun apply(p: WidgetPrefs) {
         lifecycleScope.launch {
             store.save(p)
-            runCatching { TodayWidget().updateAllWidgets(applicationContext) }
+            runCatching { updateAllBoardWidgets(applicationContext) }
         }
     }
 
