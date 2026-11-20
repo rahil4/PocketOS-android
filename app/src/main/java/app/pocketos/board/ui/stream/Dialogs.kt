@@ -90,9 +90,10 @@ fun NoteDialog(vm: StreamViewModel, onDismiss: () -> Unit) {
                         sugg.forEach { c -> Chip(c.name, selected = chosen == c.id) { chosen = if (chosen == c.id) null else c.id } }
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (cap != null) Pill("ثبت کار برای ${DayLabel.of(cap.due, vm.today)}", primary = true) { vm.saveTaskFromText(text, chosen); onDismiss() }
-                    Pill("ثبت یادداشت", primary = cap == null) { vm.saveNote(text, chosen); onDismiss() }
+                // زیر هم و تمام‌عرض: در یک Row دکمهٔ بلند، دکمهٔ دوم را به ستونی باریک فشرده می‌کرد.
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (cap != null) Pill("ثبت کار برای ${DayLabel.of(cap.due, vm.today)}", primary = true, modifier = Modifier.fillMaxWidth()) { vm.saveTaskFromText(text, chosen); onDismiss() }
+                    Pill("ثبت یادداشت", primary = cap == null, modifier = Modifier.fillMaxWidth()) { vm.saveNote(text, chosen); onDismiss() }
                 }
             }
         },

@@ -109,10 +109,10 @@ fun TagChip(tag: String, onClick: (() -> Unit)? = null) {
 
 /** دکمه: کم‌رنگِ دورخط‌دار؛ primary = سبز پر. */
 @Composable
-fun Pill(text: String, primary: Boolean = false, onClick: () -> Unit) {
+fun Pill(text: String, primary: Boolean = false, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val shape = RoundedCornerShape(12.dp)
     Box(
-        Modifier
+        modifier
             .defaultMinSize(minHeight = 40.dp)
             .clip(shape)
             .background(if (primary) MaterialTheme.colorScheme.primary else MaterialTheme.board.slate)
